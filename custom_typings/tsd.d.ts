@@ -1,0 +1,1 @@
+/// <reference path="osm-auth/osm-auth.d.ts" />
