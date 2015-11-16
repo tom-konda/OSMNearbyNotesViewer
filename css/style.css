@@ -1,0 +1,11 @@
+article.comment > .commentText{
+  white-space: pre;
+}
+
+#note-list > section + section{
+  border-top : 1px solid;
+}
+.comment-info > * + *,
+.note-info > * + *{
+  padding-left: 1em;
+}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OSM Nearby Notes Viewer</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="//cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css">
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.Default.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <script src="//cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/leaflet.markercluster-src.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+  </head>
+  <body>
+    <input id="get-near-notes" type="button" value="地図メモの取得・表示">
+    <div id="map" style="width:700px;height:700px"></div>
+    <div id="note-list"></div>
+    <script src="js/main.js"></script>
+    <template id="note-content">
+      <section class="note">
+        <div class="note-info"><span class="create-date">
+            <time></time></span><span class="modified-date">
+            <time></time></span><span class="status"></span></div>
+        <div class="comment-list"></div>
+        <form>
+          <label for="changeNoteStatus">メモの状態の変更</label>
+          <select id="changeNoteStatus">
+            <option value>変更しない</option>
+            <option value="closed">解決</option>
+            <option value="reopened" disabled="disabled">再開</option>
+          </select>
+          <label for="addNoteComment">コメント
+            <textarea id="addNoteComment"></textarea>
+          </label>
+        </form>
+        <button>送信</button>
+      </section>
+    </template>
+    <template id="comment-content">
+      <article class="comment">
+        <div class="comment-info"><span class="user-osm-page"><a></a></span><span class="submit-date">
+            <time></time></span><span class="user-action"></span></div>
+        <p class="commentText"></p>
+      </article>
+    </template>
+  </body>
+</html>
