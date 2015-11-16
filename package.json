@@ -1,0 +1,24 @@
+{
+  "name": "osmnotesviewer",
+  "version": "0.0.1",
+  "description": "OpenStreetMapのユーザが登録した近辺のNotesを取得して返信できる",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "OpenStreetMap"
+  ],
+  "author": "tom-konda",
+  "license": "MIT",
+  "dependencies": {
+    "osm-auth": "^0.2.8"
+  },
+  "devDependencies": {
+    "browserify": "^12.0.1",
+    "gulp": "^3.9.0",
+    "jade": "^1.11.0",
+    "tsd": "^0.6.5",
+    "typescript": "^1.6.2"
+  }
+}
