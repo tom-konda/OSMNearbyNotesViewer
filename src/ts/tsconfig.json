@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "noImplicitAny": false,
+        "outDir": "../../temp",
+        "rootDir": ".",
+        "sourceMap": false
+    },
+    "exclude": [
+    ]
+}

@@ -1,6 +1,4 @@
 /node_modules
-main.js
-/typings
-/renderer
+/src/ts/typings
 .DS_Store
 Thumb.db

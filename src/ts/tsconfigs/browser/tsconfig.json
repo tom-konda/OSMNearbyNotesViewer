@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "noImplicitAny": false,
+        "outDir": "./../../../../temp",
+        "rootDir": "./../../browser",
+        "sourceMap": false
+    },
+    "files": [
+        "../../custom_typings/tsd.d.ts",
+        "../../typings/tsd.d.ts",
+        "../../browser/coordinate-calc.ts",
+        "../../browser/main.ts"
+    ],
+    "exclude": [
+    ]
+}
