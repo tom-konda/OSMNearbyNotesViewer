@@ -36,6 +36,11 @@ namespace coordinateCalc {
       e : number,
       s : number,
       w : number,
+    } = {
+      n : 0,
+      e : 0,
+      s : 0,
+      w : 0,
     };
     const MIN_LONGITUDE = -180;
     const CARRY_LONGITUDE = 360
