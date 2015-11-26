@@ -3,6 +3,7 @@
 	"files.exclude": {
 		"node_modules" : true,
 		"src/ts/typings" : true,
+		"dist/**" : true,
 		"**/.git": true,
 		"**/.DS_Store": true,
 		"**/Thumb.db" : true

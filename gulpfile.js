@@ -9,29 +9,30 @@ let fs = require('fs');
 // dir definition
 var opt = {
   root: '.',
-  build: './build',
-  lib: './lib',
+  dist: './dist',
   source: './src',
   temp: './temp',
   buildOptionsDir: './src/ts/tsconfigs',
 };
 
 /* clean */
-gulp.task('clean', del.bind(null, [
-  `${opt.root}/main.js`,
+gulp.task('before-clean', del.bind(null, [
+  `${opt.root}/index.js`,
   `${opt.temp}/**`,
+  `${opt.dist}/*.html`,
+  `${opt.dist}/js/*.js`,
 ]));
 /**/
 
 gulp.task('build',
   function(done) {
     // seq('clean', 'ts:build-server', 'ts:build-browser', 'browserify', 'copy-css', 'jade', done);
-    seq('clean', 'ts:build-server', 'ts:build-browser', done);
+    seq('before-clean', 'ts:build-server', 'ts:build-browser', 'browserify', 'jade', 'copy-js', 'after-clean',done);
   }
 );
 
-gulp.task('ts:build-server', shell.task([`tsc -p ${opt.buildOptionsDir}/server`]));
-gulp.task('ts:build-browser', shell.task([`tsc -p ${opt.buildOptionsDir}/browser`]));
+gulp.task('ts:build-server', shell.task([`npm run ts:build-server`]));
+gulp.task('ts:build-browser', shell.task([`npm run ts:build-browser`]));
 
 gulp.task('jade',
   function () {
@@ -45,10 +46,27 @@ gulp.task('jade',
         (fileName) => {
         let text = jade.renderFile(`${opt.source}/views/${fileName}`);
         let fileExcludeExt = fileName.split('.')[0];
-        fs.writeFile(`${opt.build}/${fileExcludeExt}.html`, text);
+        fs.writeFile(`${opt.dist}/${fileExcludeExt}.html`, text);
       });
     });
   }
 );
 
+gulp.task('copy-js', 
+  function() {
+    return gulp.src(
+      [ `${opt.temp}/coordinate-calc.js`],
+      { base: opt.temp }
+    )
+    .pipe( gulp.dest( `${opt.dist}/js` ) );
+    /**/
+  }
+);
+
+gulp.task('after-clean', del.bind(null, [
+  `${opt.temp}/**`,
+]));
+/**/
+
+gulp.task('browserify', shell.task([`browserify ${opt.temp}/main.js -o ${opt.dist}/js/main.js`]));
 gulp.task('default', ['build']);

@@ -4,6 +4,8 @@
   "description": "OpenStreetMapのユーザが登録した近辺のNotesを取得して返信できる",
   "main": "index.js",
   "scripts": {
+    "ts:build-browser" : "tsc -p ./src/ts/tsconfigs/browser",
+    "ts:build-server" : "tsc --outDir ./ -p ./src/ts/tsconfigs/server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
