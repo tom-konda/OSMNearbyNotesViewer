@@ -7,6 +7,9 @@
   "installed": {
     "node/node.d.ts": {
       "commit": "aed176536a202b9a2475ce1989ea6d2d0226a185"
+    },
+    "sweetalert/sweetalert.d.ts": {
+      "commit": "98b4177d24ed2b5679d395c832ef337bd0b17c1c"
     }
   }
 }
