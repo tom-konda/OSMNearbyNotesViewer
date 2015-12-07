@@ -31,12 +31,7 @@ namespace coordinateCalc {
   export function getCoordinateArea(coordinate:{lat : string, lon : string}, distance:number):{n : number, e : number, s : number, w : number} {
     let latitude = parseFloat(coordinate.lat);
     let longitude = parseFloat(coordinate.lon);
-    let edgeCoordinate:{
-      n : number,
-      e : number,
-      s : number,
-      w : number,
-    } = {
+    let edgeCoordinate = {
       n : 0,
       e : 0,
       s : 0,
