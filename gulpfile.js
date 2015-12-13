@@ -55,7 +55,7 @@ gulp.task('jade',
 gulp.task('copy-js', 
   function() {
     return gulp.src(
-      [ `${opt.temp}/coordinate-calc.js`],
+      [ `${opt.temp}/coordinate-calc.js`, `${opt.temp}/indexeddb-class.js`],
       { base: opt.temp }
     )
     .pipe( gulp.dest( `${opt.dist}/js` ) );

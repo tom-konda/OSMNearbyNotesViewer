@@ -1,4 +1,4 @@
-namespace coordinateCalc {
+export namespace coordinateCalc {
   'use strict'
   export const EARTH_RADIUS = 6378.137;
   export const EARTH_POLAR_RADIUS = 6356.752;
@@ -16,6 +16,7 @@ namespace coordinateCalc {
   }
   
   export function getLatitudeFromDistance(latitude:number, distance:number, isNorthward:boolean):number{
+    'use strict'
     let calculatedLatitude:number;
     const MAX_LATITUDE_ABSOLUTE_VALUE = 90;
     if (isNorthward) {
@@ -29,6 +30,7 @@ namespace coordinateCalc {
   }
   
   export function getCoordinateArea(coordinate:{lat : string, lon : string}, distance:number):{n : number, e : number, s : number, w : number} {
+    'use strict'
     let latitude = parseFloat(coordinate.lat);
     let longitude = parseFloat(coordinate.lon);
     let edgeCoordinate = {

@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES6",
+        "module": "commonjs",
         "noImplicitAny": false,
         "outDir": "./../../../../temp",
         "rootDir": "./../../browser",
@@ -10,6 +11,7 @@
         "../../custom_typings/tsd.d.ts",
         "../../typings/tsd.d.ts",
         "../../browser/coordinate-calc.ts",
+        "../../browser/indexeddb-class.ts",
         "../../browser/main.ts"
     ],
     "exclude": [
