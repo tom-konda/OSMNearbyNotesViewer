@@ -1,13 +1,14 @@
 'use strict';
-let del = require('del');
-let gulp = require('gulp');
-let shell = require('gulp-shell');
-let seq = require('run-sequence');
-let jade = require('jade');
-let fs = require('fs');
+const del = require('del');
+const gulp = require('gulp');
+const shell = require('gulp-shell');
+const seq = require('run-sequence');
+const jade = require('jade');
+const fs = require('fs');
+const path = require('path');
 
 // dir definition
-var opt = {
+let opt = {
   root: '.',
   dist: './dist',
   source: './src',
@@ -44,7 +45,12 @@ gulp.task('jade',
       });
       fileList.forEach(
         (fileName) => {
-        let text = jade.renderFile(`${opt.source}/views/${fileName}`);
+        let text = jade.renderFile(
+          `${opt.source}/views/${fileName}`,
+          {
+            'pretty' : true,
+          }
+        );
         let fileExcludeExt = fileName.split('.')[0];
         fs.writeFile(`${opt.dist}/${fileExcludeExt}.html`, text);
       });
