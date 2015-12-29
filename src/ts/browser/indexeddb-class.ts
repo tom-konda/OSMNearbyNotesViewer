@@ -17,9 +17,12 @@ export namespace IDBService {
       function(event){
         _db = _db || (<IDBRequest>event.target).result;
         let objStoreNameList = (<DOMStringList>(<IDBRequest>event.target).result.objectStoreNames);
-        
-        for(let i = 0, cnt = objStoreNameList.length; i < cnt;++i){
-          _tables.push(objStoreNameList.item(i));
+        let i = 0;
+        let cnt = objStoreNameList.length;
+        for( ; i < cnt;++i){
+          if(_tables.indexOf(objStoreNameList.item(i)) === -1){
+            _tables.push(objStoreNameList.item(i));
+          }
         }
       }
     );
@@ -35,11 +38,17 @@ export namespace IDBService {
     return _db.transaction(tables, mode);
   }
   export function createObjectStore (table, keyPath, isAutoIncrement = true):IDBObjectStore{
-      // _tables.push(table);
+      if (_tables.indexOf(table) === -1){
+        _tables.push(table);
+      }
       return _db.createObjectStore(table, {keyPath : keyPath, autoIncrement : isAutoIncrement});
   }
   export function deleteObjectStore (tables){
       // TODO
+  }
+  
+  export function getTables(){
+    return _tables;
   }
 };
 
