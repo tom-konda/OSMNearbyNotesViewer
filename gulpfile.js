@@ -27,8 +27,7 @@ gulp.task('before-clean', del.bind(null, [
 
 gulp.task('build',
   function(done) {
-    // seq('clean', 'ts:build-server', 'ts:build-browser', 'browserify', 'copy-css', 'jade', done);
-    seq('before-clean', 'ts:build-server', 'ts:build-browser', 'browserify', 'jade', 'copy-js', 'after-clean',done);
+    seq('before-clean', 'ts:build-server', 'ts:build-browser', 'browserify', 'jade', 'copy-css','copy-js', 'after-clean',done);
   }
 );
 
@@ -55,6 +54,16 @@ gulp.task('jade',
         fs.writeFile(`${opt.dist}/${fileExcludeExt}.html`, text);
       });
     });
+  }
+);
+
+gulp.task('copy-css', 
+  function() {
+    return gulp.src(
+      [ `${opt.source}/css/**`]
+    )
+    .pipe( gulp.dest( `${opt.dist}/css` ) );
+    /**/
   }
 );
 

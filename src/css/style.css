@@ -1,0 +1,7 @@
+#note-content > .thread:before{
+    content: counter(normal)
+}
+
+article.comment > .topic{
+    white-space: pre;
+}

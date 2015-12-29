@@ -3,9 +3,28 @@ html
 	head
 		title OSM Nearby Notes Viewer
 		meta(charset="UTF-8")
+		link(rel="stylesheet" type="text/css" href="//cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css")
 		link(rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css")
-		script(src="//cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js")
+		link(rel="stylesheet" type="text/css" href="/css/style.css")
+		script(src="//cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js")
+		script(src="//cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js" async)
 	body
 		input#get-near-notes(type="button" value="地図メモの取得")
 		input#display(type="button" value="地図メモの表示")
+		div#map(style="width:700px;height:700px")
+		div#note-list
 		script(src="js/main.js")
+		template#note-content
+			section.note
+				time.create-date
+				p.state
+				.comment-list
+		template#comment-content
+			article.comment
+				p.user
+					a.user-osm-page
+				p.user-action
+				p.topic
+				p.submit-date
+					time.create-date
+			
