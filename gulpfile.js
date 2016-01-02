@@ -1,10 +1,12 @@
 'use strict';
-let del = require('del');
-let gulp = require('gulp');
-let shell = require('gulp-shell');
-let seq = require('run-sequence');
-let jade = require('jade');
-let fs = require('fs');
+const del = require('del');
+const gulp = require('gulp');
+const shell = require('gulp-shell');
+const seq = require('run-sequence');
+const jade = require('jade');
+const fs = require('fs');
+const path = require('path');
+const browserify = require('browserify');
 
 // dir definition
 var opt = {
@@ -16,13 +18,36 @@ var opt = {
 };
 
 /* clean */
-gulp.task('before-clean', del.bind(null, [
-  `${opt.root}/index.js`,
-  `${opt.temp}/**`,
-  `${opt.dist}/*.html`,
-  `${opt.dist}/js/*.js`,
-]));
+gulp.task('before-clean', 
+  function () {
+    
+    // let isExistDistDir = (function(filePath){
+    //   try{
+    //     fs.statSync(filePath);
+    //   }catch(err){
+    //     if(err.code == 'ENOENT') return false;
+    //   }
+    //   return true;
+    // })(path.normalize(opt.dist));
+    
+    // if(isExistDistDir === false){
+    //   fs.mkdir(
+    //     path.normalize(opt.dist),
+    //     function () {
+    //       ;
+    //     }
+    //   );
+    // }
+    
+    del.bind(null, [
+      `${opt.root}/index.js`,
+      `${opt.temp}/**`,
+      `${opt.dist}/*.html`,
+      `${opt.dist}/js/*.js`,
+    ]);
 /**/
+  }
+);
 
 gulp.task('build',
   function(done) {
@@ -45,8 +70,8 @@ gulp.task('jade',
       fileList.forEach(
         (fileName) => {
         let text = jade.renderFile(`${opt.source}/views/${fileName}`);
-        let fileExcludeExt = fileName.split('.')[0];
-        fs.writeFile(`${opt.dist}/${fileExcludeExt}.html`, text);
+        let fileExcludeExt = path.basename(fileName, '.jade');
+        fs.writeFile(`${path.normalize(`${opt.dist}/${fileExcludeExt}.html`)}`, text);
       });
     });
   }
@@ -67,6 +92,18 @@ gulp.task('after-clean', del.bind(null, [
   `${opt.temp}/**`,
 ]));
 /**/
+// let tempMainJS = path.normalize(`${opt.temp}/main.js`);
+// let distMainJS = path.normalize(`${opt.dist}/js/main.js`);
+// gulp.task('browserify', shell.task([`browserify ${tempMainJS} -o ${distMainJS}`]));
+gulp.task(
+  'browserify',
+  function () {
+    browserify({
+      entries : [`${opt.temp}/main.js`],
+    }).bundle()
+    .pipe(gulp.dest(`${opt.dist}/js/`))
+  }
+);
 
-gulp.task('browserify', shell.task([`browserify ${opt.temp}/main.js -o ${opt.dist}/js/main.js`]));
+
 gulp.task('default', ['build']);
