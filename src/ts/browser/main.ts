@@ -18,7 +18,7 @@ import {coordinateCalc} from './coordinate-calc';
         ref http://webos-goodies.jp/archives/5_pitfalls_of_indexeddb_on_ios8.html
       */
       if(oldVersion < 1) {
-        // 新規作成時
+        // Create new indexedDB
         let notesStore = idbService.createObjectStore('notes', 'id', false);
         notesStore.createIndex(
           'createdIdx',
@@ -209,6 +209,67 @@ import {coordinateCalc} from './coordinate-calc';
       }
     }
     
+    let displayNoteAndComment = function(){
+      let trans = idbService.getTransaction(undefined, 'readonly');
+      let notesOS = trans.objectStore('notes');
+      // Get newest note first
+      let notesIdx = notesOS.index('createdIdx');
+      let notesCursor = notesIdx.openCursor(null, 'prev');
+      
+      let noteTemplate = (<HTMLTemplateElement>document.querySelector('#note-content'));
+      notesCursor.addEventListener(
+        'success',
+        function(event){
+          if(notesCursor.result){
+            let commentTemplate = (<HTMLTemplateElement>document.querySelector('#comment-content'));
+            let noteCursorVal = (<IDBCursorWithValue>notesCursor.result);
+
+            let noteStatus = noteTemplate.content.querySelector('.status');
+            noteStatus.textContent = `状態：${noteCursorVal.value.status}`;
+            let noteSection = noteTemplate.content.querySelector('section');
+            noteSection.id = `note-${noteCursorVal.value.id}`;
+            noteTemplate.content.querySelector('.create-date').firstChild.textContent = 'メモ作成日：';
+            let created = (<HTMLTimeElement>noteTemplate.content.querySelector('time'));
+            created.dateTime = (<Date>noteCursorVal.value.created).toISOString();
+            created.textContent = (<Date>noteCursorVal.value.created).toLocaleString();
+            let note = document.importNode(noteTemplate.content, true);
+            document.querySelector('#note-list').appendChild(note);
+            
+            let commentsOS = trans.objectStore('comments');
+            let commentsIdx = commentsOS.index('threadIdIdx');
+
+            let commentCursor = commentsIdx.openCursor(IDBKeyRange.only(noteCursorVal.value.id));
+            commentCursor.addEventListener(
+              'success',
+              function(event) {
+                if (commentCursor.result === null) {
+                  // コメントがなくなったら次のメモに移動
+                  noteCursorVal.advance(1);
+                }
+                else {
+                  let commCursorVal = (<IDBCursorWithValue>commentCursor.result);
+                  let commentText = commentTemplate.content.querySelector('p.commentText');
+                  commentText.textContent = commCursorVal.value.text;
+                  let commentDate = (<HTMLTimeElement>commentTemplate.content.querySelector('time'));
+                  commentDate.dateTime = (<Date>commCursorVal.value.date).toISOString();
+                  commentDate.textContent = (<Date>commCursorVal.value.date).toLocaleString();
+                  let userOSMPage = (<HTMLAnchorElement>commentTemplate.content.querySelector('a'));
+                  userOSMPage.textContent = commCursorVal.value.user;
+                  userOSMPage.href = commCursorVal.value.userURL;
+                  let userAction = commentTemplate.content.querySelector('.user-action');
+                  userAction.textContent = `${commCursorVal.value.action}`;
+                  
+                  let comment = document.importNode(commentTemplate.content, true);
+                  document.querySelector(`#note-${noteCursorVal.value.id} > div`).appendChild(comment);
+                  commCursorVal.advance(1);
+                }
+              }
+            );
+          }
+        }
+      );
+    }
+    
     let button = document.getElementById('get-near-notes');
     button.addEventListener(
       'click',
@@ -241,64 +302,7 @@ import {coordinateCalc} from './coordinate-calc';
     let dispButton = document.getElementById('display');
     dispButton.addEventListener(
       'click',
-      function(){
-        let trans = idbService.getTransaction(undefined, 'readonly');
-        let notesOS = trans.objectStore('notes');
-        // Get newest note first
-        let notesIdx = notesOS.index('createdIdx');
-        let notesCursor = notesIdx.openCursor(null, 'prev');
-        
-        let threadTemplate = (<HTMLTemplateElement>document.querySelector('#note-content'));
-        notesCursor.addEventListener(
-          'success',
-          function(event){
-            if(notesCursor.result){
-              let commentTemplate = (<HTMLTemplateElement>document.querySelector('#comment-content'));
-              //IDBRequestのresultはIDBCursorWithValueである
-              let noteCursorVal = (<IDBCursorWithValue>notesCursor.result);
-
-              let noteStatus = threadTemplate.content.querySelector('.status');
-              noteStatus.textContent = noteCursorVal.value.status;
-              let noteSection = threadTemplate.content.querySelector('section');
-              noteSection.id = `note-${noteCursorVal.value.id}`;
-              let created = threadTemplate.content.querySelector('time');
-              created.textContent = (<Date>noteCursorVal.value.created).toLocaleString();
-              let note = document.importNode(threadTemplate.content, true);
-              document.querySelector('#note-list').appendChild(note);
-              
-              let commentsOS = trans.objectStore('comments');
-              let commentsIdx = commentsOS.index('threadIdIdx');
-
-              let commentCursor = commentsIdx.openCursor(IDBKeyRange.only(noteCursorVal.value.id));
-              commentCursor.addEventListener(
-                'success',
-                function(event) {
-                  if (commentCursor.result === null) {
-                    // コメントがなくなったら次のメモに移動
-                    noteCursorVal.advance(1);
-                  }
-                  else {
-                    let commCursorVal = (<IDBCursorWithValue>commentCursor.result);
-                    let commentText = commentTemplate.content.querySelector('p.commentText');
-                    commentText.textContent = commCursorVal.value.text;
-                    let date = commentTemplate.content.querySelector('time');
-                    date.textContent = (<Date>commCursorVal.value.date).toLocaleString();
-                    let userOSMPage = (<HTMLAnchorElement>commentTemplate.content.querySelector('a'));
-                    userOSMPage.textContent = commCursorVal.value.user;
-                    userOSMPage.href = commCursorVal.value.userURL;
-                    let userAction = commentTemplate.content.querySelector('.user-action');
-                    userAction.textContent = commCursorVal.value.action;
-                    
-                    let comment = document.importNode(commentTemplate.content, true);
-                    document.querySelector(`#note-${noteCursorVal.value.id} > div`).appendChild(comment);
-                    commCursorVal.advance(1);
-                  }
-                }
-              );
-            }
-          }
-        );
-      }
+      displayNoteAndComment
     );
   });
   

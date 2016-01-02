@@ -16,15 +16,17 @@ html
 		script(src="js/main.js")
 		template#note-content
 			section.note
-				time.create-date
-				p.status
+				.note-info
+					span.create-date
+						time
+					span.status
 				.comment-list
 		template#comment-content
 			article.comment
-				p.user
+				.comment-info
 					a.user-osm-page
-				p.user-action
+					span.submit-date
+						time
+					span.user-action
 				p.commentText
-				p.submit-date
-					time.create-date
 			

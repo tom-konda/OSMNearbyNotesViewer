@@ -1,7 +1,11 @@
-#note-content > .thread:before{
-    content: counter(normal)
+article.comment > .commentText{
+  white-space: pre;
 }
 
-article.comment > .topic{
-    white-space: pre;
+#note-list > section + section{
+  border-top : 1px solid;
+}
+.comment-info > * + *,
+.note-info > * + *{
+  padding-left: 1em;
 }
