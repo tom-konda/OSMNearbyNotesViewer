@@ -10,6 +10,12 @@
     },
     "sweetalert/sweetalert.d.ts": {
       "commit": "98b4177d24ed2b5679d395c832ef337bd0b17c1c"
+    },
+    "leaflet/leaflet.d.ts": {
+      "commit": "1ffc055e50f0df255da310485a7871c6f894e370"
+    },
+    "jade/jade.d.ts": {
+      "commit": "1ffc055e50f0df255da310485a7871c6f894e370"
     }
   }
 }

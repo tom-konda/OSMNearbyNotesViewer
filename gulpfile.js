@@ -9,7 +9,7 @@ const path = require('path');
 const browserify = require('browserify');
 
 // dir definition
-var opt = {
+let opt = {
   root: '.',
   dist: './dist',
   source: './src',
@@ -51,8 +51,7 @@ gulp.task('before-clean',
 
 gulp.task('build',
   function(done) {
-    // seq('clean', 'ts:build-server', 'ts:build-browser', 'browserify', 'copy-css', 'jade', done);
-    seq('before-clean', 'ts:build-server', 'ts:build-browser', 'browserify', 'jade', 'copy-js', 'after-clean',done);
+    seq('before-clean', 'ts:build-server', 'ts:build-browser', 'browserify', 'jade', 'copy-css','copy-js', 'after-clean',done);
   }
 );
 
@@ -74,6 +73,16 @@ gulp.task('jade',
         fs.writeFile(`${path.normalize(`${opt.dist}/${fileExcludeExt}.html`)}`, text);
       });
     });
+  }
+);
+
+gulp.task('copy-css', 
+  function() {
+    return gulp.src(
+      [ `${opt.source}/css/**`]
+    )
+    .pipe( gulp.dest( `${opt.dist}/css` ) );
+    /**/
   }
 );
 
