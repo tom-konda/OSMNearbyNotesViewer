@@ -1,0 +1,12 @@
+{
+  "name": "osmnearbynotesviewer",
+  "ambientDependencies": {
+    "leaflet": "github:DefinitelyTyped/DefinitelyTyped/leaflet/leaflet.d.ts#1ffc055e50f0df255da310485a7871c6f894e370",
+    "leaflet-markercluster": "github:DefinitelyTyped/DefinitelyTyped/leaflet-markercluster/leaflet-markercluster.d.ts#8eca847a131aea253d4f00fc0eacd481c1ef628a",
+    "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#aed176536a202b9a2475ce1989ea6d2d0226a185",
+    "sweetalert": "github:DefinitelyTyped/DefinitelyTyped/sweetalert/sweetalert.d.ts#98b4177d24ed2b5679d395c832ef337bd0b17c1c"
+  },
+  "ambientDevDependencies": {
+    "jade": "github:DefinitelyTyped/DefinitelyTyped/jade/jade.d.ts#c69185b594b5a846b84ce1f89864b44cda727df1"
+  }
+}
