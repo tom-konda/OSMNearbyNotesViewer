@@ -1,4 +1,4 @@
-/* ref: https://github.com/Microsoft/TypeScript/issues/1075#issuecomment-62084180 */ 
+/* ref: https://github.com/Microsoft/TypeScript/issues/1075#issuecomment-62084180 */
 // User customization
 declare var webkitIndexedDB: IDBFactory;
 declare var mozIndexedDB: IDBFactory;
@@ -26,9 +26,9 @@ interface Window {
 }
 
 interface HTMLTemplateElement extends HTMLElement {
-	content : HTMLFrameElement,
+  content : HTMLFrameElement,
 }
 
 interface HTMLTimeElement extends HTMLElement {
-	dateTime : String,
+  dateTime : String,
 }
