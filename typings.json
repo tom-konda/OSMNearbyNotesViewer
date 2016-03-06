@@ -8,5 +8,8 @@
   },
   "ambientDevDependencies": {
     "jade": "github:DefinitelyTyped/DefinitelyTyped/jade/jade.d.ts#c69185b594b5a846b84ce1f89864b44cda727df1"
+  },
+  "dependencies": {
+    "es6-promise": "github:typed-typings/npm-es6-promise#fb04188767acfec1defd054fc8024fafa5cd4de7"
   }
 }
