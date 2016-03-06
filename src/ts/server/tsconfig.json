@@ -1,14 +1,14 @@
 {
     "compilerOptions": {
         "target": "es6",
+        "module": "commonjs",
         "noImplicitAny": false,
-        "rootDir": "./../../server",
+        "rootDir": ".",
         "sourceMap": false
     },
     "files": [
-        "../../typings/tsd.d.ts",
+        "../custom_typings/tsd.d.ts",
+        "../../../typings/browser.d.ts",
         "../../server/index.ts"
-    ],
-    "exclude": [
     ]
 }

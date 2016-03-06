@@ -1,11 +1,18 @@
 {
-  "name": "osmnotesviewer",
+  "name": "osmnearbynotesviewer",
   "version": "0.0.1",
   "description": "OpenStreetMapのユーザが登録した近辺のNotesを取得して返信できる",
   "main": "index.js",
   "scripts": {
-    "ts:build-browser": "tsc -p ./src/ts/tsconfigs/browser",
-    "ts:build-server": "tsc --outDir ./ -p ./src/ts/tsconfigs/server",
+    "prebuild": "npm run clean",
+    "build": "node -e \"require('shelljs').exec('npm-run-all ts:build-* jade mkdir-builddir browserify');\"",
+    "postbuild": "node -e \"require('shelljs').exec('npm-run-all copy-*');\"",
+    "clean": "node -e \"require('shelljs').rm('-R', ['temp', 'build']);\"",
+    "copy-src": "node -e \"require('shelljs').cp('-r', 'src/css', 'build')\"",
+    "jade": "jade src/views/*.jade -P -o build",
+    "mkdir-builddir": "node -e \"require('shelljs').mkdir('build/js');\"",
+    "browserify": "browserify temp/*.js -o build/js/main.js",
+    "ts:build-browser": "tsc -p ./src/ts/browser",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -14,15 +21,26 @@
   "author": "tom-konda",
   "license": "MIT",
   "dependencies": {
+    "es6-promise": "^3.1.2",
+    "leaflet.icon.glyph": "^0.2.0",
     "osm-auth": "^0.2.8"
   },
   "devDependencies": {
     "browserify": "^12.0.1",
     "del": "^2.1.0",
-    "gulp": "^3.9.0",
-    "gulp-shell": "^0.5.1",
+    "espower-typescript": "^4.0.0",
     "jade": "^1.11.0",
-    "run-sequence": "^1.1.5",
-    "tsd": "^0.6.5"
+    "mocha": "^2.3.4",
+    "npm-run-all": "^1.5.1",
+    "power-assert": "^1.2.0",
+    "shelljs": "^0.6.0",
+    "should": "^8.2.2",
+    "tslint": "^3.5.0",
+    "tslint-eslint-rules": "^1.0.1",
+    "typedoc": "^0.3.12",
+    "typescript": "^1.7.5"
+  },
+  "engines": {
+    "node": ">=4.3.0"
   }
 }

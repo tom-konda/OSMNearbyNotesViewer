@@ -1,8 +1,9 @@
 export namespace IDBService {
+  'use strict';
   let _db:IDBDatabase;
   let _idbName:string;
   let _tables:string[] = [];
-  
+
   export function openDB(idbName = 'example', version = 1):IDBOpenDBRequest {
     _idbName = idbName;
     let idbReq = indexedDB.open(idbName, version);
@@ -46,7 +47,7 @@ export namespace IDBService {
   export function deleteObjectStore (tables){
       // TODO
   }
-  
+
   export function getTables(){
     return _tables;
   }
