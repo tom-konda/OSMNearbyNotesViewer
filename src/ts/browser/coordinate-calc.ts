@@ -3,7 +3,7 @@ export namespace coordinateCalc {
   export const EARTH_RADIUS = 6378.137;
   export const EARTH_POLAR_RADIUS = 6356.752;
   export const STRAIGHT_ANGLE = 180;
-  
+
   export function getLongitudeFromDistance(latitude:number, longitude:number, distance:number, isEastward:boolean):number{
     if (isEastward) {
       return longitude + distance * STRAIGHT_ANGLE /
@@ -14,7 +14,7 @@ export namespace coordinateCalc {
         (EARTH_RADIUS * Math.PI * Math.cos(latitude / STRAIGHT_ANGLE * Math.PI));
     }
   }
-  
+
   export function getLatitudeFromDistance(latitude:number, distance:number, isNorthward:boolean):number{
     'use strict'
     let calculatedLatitude:number;
@@ -28,7 +28,7 @@ export namespace coordinateCalc {
       return calculatedLatitude < -MAX_LATITUDE_ABSOLUTE_VALUE ? -MAX_LATITUDE_ABSOLUTE_VALUE : calculatedLatitude;
     }
   }
-  
+
   export function getCoordinateArea(coordinate:{lat : string, lon : string}, distance:number):{n : number, e : number, s : number, w : number} {
     'use strict'
     let latitude = parseFloat(coordinate.lat);
