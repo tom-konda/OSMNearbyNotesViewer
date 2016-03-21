@@ -3,7 +3,7 @@
         "target": "es6",
         "module": "commonjs",
         "noImplicitAny": false,
-        "outDir": "./../../../temp",
+        "outDir": "./../../../temp/browser",
         "rootDir": ".",
         "sourceMap": false
     },

@@ -8,10 +8,10 @@
     "build": "node -e \"require('shelljs').exec('npm-run-all ts:build-* jade mkdir-builddir browserify');\"",
     "postbuild": "node -e \"require('shelljs').exec('npm-run-all copy-*');\"",
     "clean": "node -e \"require('shelljs').rm('-R', ['temp', 'build']);\"",
-    "copy-src": "node -e \"require('shelljs').cp('-r', 'src/css', 'build')\"",
-    "jade": "jade src/views/*.jade -P -o build",
+    "copy-src": "node -e \"require('shelljs').cp('-R', 'src/css', 'build')\"",
+    "jade": "node -e \"require('shelljs').exec('jade src/views -P -o build');\"",
     "mkdir-builddir": "node -e \"require('shelljs').mkdir('build/js');\"",
-    "browserify": "browserify temp/*.js -o build/js/main.js",
+    "browserify": "node -e \"require('shelljs').exec('browserify --entry ./temp/browser/main.js -o build/js/main.js');\"",
     "ts:build-browser": "tsc -p ./src/ts/browser",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -27,18 +27,16 @@
   },
   "devDependencies": {
     "browserify": "^12.0.1",
-    "del": "^2.1.0",
-    "espower-typescript": "^4.0.0",
+    "espower-typescript": "^4.1.0",
     "jade": "^1.11.0",
-    "mocha": "^2.3.4",
+    "mocha": "^2.4.5",
     "npm-run-all": "^1.5.1",
     "power-assert": "^1.2.0",
     "shelljs": "^0.6.0",
     "should": "^8.2.2",
     "tslint": "^3.5.0",
     "tslint-eslint-rules": "^1.0.1",
-    "typedoc": "^0.3.12",
-    "typescript": "^1.7.5"
+    "typedoc": "^0.3.12"
   },
   "engines": {
     "node": ">=4.3.0"
