@@ -30,20 +30,20 @@ import {coordinateCalc} from './coordinate-calc';
             'multiEntry' : false,
           }
         )
-        let commentsStore = idbService.createObjectStore('comments', 'threadIdCommId', false);
+        let commentsStore = idbService.createObjectStore('comments', ['noteId', 'commentNum'], false);
         commentsStore.createIndex(
-          'threadIdIdx',
-          'threadId',
+          'noteIdIdx',
+          'noteId',
           {
             'unique' : false,
             'multiEntry' : false,
           }
         );
         commentsStore.createIndex(
-          'dateIdx',
-          'date',
+          'threadCommentIdx',
+          ['noteId', 'commentNum'],
           {
-            'unique' : false,
+            'unique' : true,
             'multiEntry' : false,
           }
         );
@@ -62,7 +62,7 @@ import {coordinateCalc} from './coordinate-calc';
   idbReq.addEventListener(
     'error',
     function(event) {
-      console.log((<any>event.target).errorCode);
+      console.error((<any>event.target).errorCode);
     },
     false
   );
@@ -152,12 +152,12 @@ import {coordinateCalc} from './coordinate-calc';
           lng : notesXML[i].getAttribute('lon'),
         }
 
-        let threadId = notesXML[i].querySelector('id').textContent;
+        let noteId = notesXML[i].querySelector('id').textContent;
         let created = notesXML[i].querySelector('date_created').textContent;
         let status = notesXML[i].querySelector('status').textContent;
         let notesResult = notesOS.put({
           'latlng' : latlng,
-          'id' : threadId,
+          'id' : +noteId,
           'created' : new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
           'status' : status,
         });
@@ -216,8 +216,8 @@ import {coordinateCalc} from './coordinate-calc';
             userURL = commentList[j].querySelector('user_url').textContent;
           }
           let commentResult = commentsOS.put({
-            'threadIdCommId' : `${threadId}-${j}`,
-            'threadId' : threadId,
+            'noteId' : +noteId,
+            'commentNum' : j,
             'date' : new Date(Date.parse(`${date.split(' ').slice(0, 2).join('T')}+0000`)),
             'user' : user,
             'userURL' : userURL,
@@ -299,6 +299,9 @@ import {coordinateCalc} from './coordinate-calc';
                 postCommentAndMemoState(event, noteId).then(
                   updateNoteCommentsList,
                   (reject) => console.error(reject)
+                ).then(
+                  updateNotesDisplay,
+                  (reject) => console.error(reject)
                 );
                 event.preventDefault();
               },
@@ -306,9 +309,10 @@ import {coordinateCalc} from './coordinate-calc';
             )
 
             let commentsOS = trans.objectStore('comments');
-            let commentsIdx = commentsOS.index('threadIdIdx');
+            let commentsIdx = commentsOS.index('noteIdIdx');
 
-            let commentCursor = commentsIdx.openCursor(IDBKeyRange.only(noteCursorVal.value.id));
+            let commentRange = IDBKeyRange.only(noteCursorVal.value.id);
+            let commentCursor = commentsIdx.openCursor(commentRange);
             commentCursor.addEventListener(
               'success',
               function(event) {
@@ -344,14 +348,12 @@ import {coordinateCalc} from './coordinate-calc';
     }
 
     let postCommentAndMemoState = function(event:Event, noteId:string) {
-      console.log(auth.authenticated());
-      let select = (<HTMLSelectElement>document.querySelector(`#note-${noteId}-changeNoteStatus`));
-      let textarea = (<HTMLTextAreaElement>document.querySelector(`#note-${noteId}-addNoteComment`));
-      let fixedEncodeURIComponent = (str:string) => encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + c.codePointAt(0).toString(16));
-      let params:osmAuthXHROptions;
-
       return new Promise(
         (resolve, reject) => {
+          let select = (<HTMLSelectElement>document.querySelector(`#note-${noteId}-changeNoteStatus`));
+          let textarea = (<HTMLTextAreaElement>document.querySelector(`#note-${noteId}-addNoteComment`));
+          let fixedEncodeURIComponent = (str:string) => encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + c.codePointAt(0).toString(16));
+          let params:osmAuthXHROptions;
           if (select.value) {
             switch (select.value) {
               case 'closed' :
@@ -369,7 +371,7 @@ import {coordinateCalc} from './coordinate-calc';
                     if (err === null) {
                       console.log(xhr, 'XHR');
                       (<any>(<HTMLElement>select).dataset).currentStatus = 'closed';
-                      resolve({action : 'closed', response : xhr});
+                      resolve({action : 'closed', noteId : noteId, response : xhr});
                     }
                     else {
                       switch (err.status) {
@@ -379,13 +381,12 @@ import {coordinateCalc} from './coordinate-calc';
                         case 410:
                           swal('410');
                       }
-                      reject(err);
+                      reject(err.responseText);
                     }
                   }
                 );
                 break;
               case 'reopened' :
-              noteId = '1129';
                 params = {
                   path : `/api/0.6/notes/${noteId}/reopen`,
                   method : 'POST',
@@ -400,7 +401,7 @@ import {coordinateCalc} from './coordinate-calc';
                     if (err === null) {
                       console.log(xhr, 'XHR');
                       (<any>(<HTMLElement>select).dataset).currentStatus = 'opened';
-                      resolve({action : 'closed', response : xhr});
+                      resolve({action : 'reopened', noteId : noteId, response : xhr});
                     }
                     else {
                       switch (err.status) {
@@ -411,7 +412,7 @@ import {coordinateCalc} from './coordinate-calc';
                           swal('410');
                           break;
                       }
-                      reject(err);
+                      reject(err.responseText);
                     }
                   }
                 );
@@ -427,10 +428,10 @@ import {coordinateCalc} from './coordinate-calc';
 
             auth.xhr(
               params,
-              (err, xhr) => {
+              (err, responseXML) => {
                 if (err === null) {
-                  console.log(xhr, 'XHR');
-                  resolve({action : 'closed', response : xhr});
+                  console.log(responseXML, 'XHR');
+                  resolve({action : 'commented', noteId : noteId, response : responseXML});
                 }
                 else {
                   switch (err.status) {
@@ -441,7 +442,7 @@ import {coordinateCalc} from './coordinate-calc';
                       swal('410');
                       break;
                   }
-                  reject(err);
+                  reject(err.responseText);
                 }
               }
             );
@@ -450,8 +451,147 @@ import {coordinateCalc} from './coordinate-calc';
       );
     }
 
-    let updateNoteCommentsList = (resolve) => {
-      console.log(arguments);
+    let updateNoteCommentsList = (xhrResult) => {
+      return new Promise(
+        (resolve, reject) => {
+          let noteId = xhrResult.noteId;
+          let trans = idbService.getTransaction();
+          let notesOS = trans.objectStore('notes');
+          let commentsOS = trans.objectStore('comments');
+          let isOpened = true;
+
+          let response = <XMLDocument>xhrResult.response;
+
+          if (xhrResult.action !== 'commented') {
+            console.log(xhrResult ,'変更');
+
+            let latlng = {
+              lat : response.querySelector('note').getAttribute('lat'),
+              lng : response.querySelector('note').getAttribute('lon'),
+            }
+
+            let created = response.querySelector('date_created').textContent;
+            let status = response.querySelector('status').textContent;
+
+            let notesResult = notesOS.put({
+              'latlng' : latlng,
+              'id' : +noteId,
+              'created' : new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
+              'status' : status,
+            });
+
+
+            if(xhrResult.action === 'closed'){
+              isOpened = false;
+            }
+          }
+
+          let commentsIdx = commentsOS.index('noteIdIdx');
+
+          let noteKeyRange = IDBKeyRange.only(noteId);
+          let noteCommentsRequest = commentsIdx.count(noteKeyRange);
+
+          noteCommentsRequest.onsuccess = (
+            () => {
+              console.log(arguments);
+              let storedCommentsCount = noteCommentsRequest.result;
+
+              let lastComments = response.querySelectorAll('comments > comment');
+              let lastCommentsCount = response.querySelectorAll('comments > comment').length;
+
+              let successCommentsCount = 0;
+
+              console.log(storedCommentsCount);
+              for (let i = storedCommentsCount; i < lastCommentsCount; ++i) {
+                let comment = lastComments[i];
+                let commentResult = commentsOS.add({
+                  'noteId' : +noteId,
+                  'commentNum' : i,
+                  'date' : new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`)),
+                  'user' : comment.querySelector('user').textContent,
+                  'userURL' : comment.querySelector('user_url').textContent,
+                  'text' : comment.querySelector('text').textContent,
+                  'action' : comment.querySelector('action').textContent,
+                });
+
+                commentResult.addEventListener(
+                  'success',
+                  function(event){
+                    ++successCommentsCount;
+
+                    if (successCommentsCount === lastCommentsCount - storedCommentsCount) {
+                      return resolve({
+                        'displayedCommentsCount' : storedCommentsCount,
+                        'currentStoredCommentsCount' : lastCommentsCount,
+                        'responseXML' : response,
+                        'noteId' : +noteId,
+                        'isOpened' : isOpened,
+                      });
+                    }
+                  }
+                )
+
+                commentResult.addEventListener(
+                  'error',
+                  function(event){
+                    console.warn(event);
+                    return reject(event);
+                  }
+                )
+              }
+
+            }
+          );
+
+          noteCommentsRequest.onerror = (
+            (event) => {
+              console.warn(event);
+              return reject(event);
+            }
+          );
+        }
+      );
+    }
+
+    let updateNotesDisplay = (updateResult) => {
+      console.log(updateResult, 'アップデート')
+      let displayedCommentCount = updateResult.displayedCommentsCount;
+      let currentStoredCommentsCount = updateResult.currentStoredCommentsCount;
+      let commentTemplate = (<HTMLTemplateElement>document.querySelector('#comment-content'));
+      let noteId = updateResult.noteId;
+      let noteIsOpened = updateResult.isOpened;
+      let response = <XMLDocument>updateResult.responseXML;
+      let comments = response.querySelectorAll('comments > comment');
+
+      for (let i = displayedCommentCount; i < currentStoredCommentsCount; i++) {
+        let comment = comments[i];
+
+        let commentText = commentTemplate.content.querySelector('p.commentText');
+        commentText.textContent = comment.querySelector('text').textContent;
+        let commentDate = (<HTMLTimeElement>commentTemplate.content.querySelector('time'));
+        let xmlDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
+        commentDate.dateTime = xmlDate.toISOString();
+        commentDate.textContent = xmlDate.toLocaleString();
+        let userAction = commentTemplate.content.querySelector('.user-action');
+        userAction.textContent = comment.querySelector('action').textContent;
+
+        if (comment.querySelector('user')) {
+          let userOSMPage = (<HTMLAnchorElement>commentTemplate.content.querySelector('a'));
+          userOSMPage.textContent = comment.querySelector('user').textContent;
+          userOSMPage.href = comment.querySelector('user_url').textContent;
+        }
+
+        let commentDOM = document.importNode(commentTemplate.content, true);
+        document.querySelector(`#note-${noteId} > div`).appendChild(commentDOM);
+      }
+
+      (<HTMLTextAreaElement>document.querySelector(`#note-${noteId}-addNoteComment`)).value = '';
+      if (noteIsOpened) {
+        ;
+      }
+      else {
+        ;
+      }
     }
 
     let button = document.getElementById('get-near-notes');
