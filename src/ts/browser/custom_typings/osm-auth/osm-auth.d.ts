@@ -1,16 +1,16 @@
 declare var osmAuth: osmAuthConstructor;
 
 interface osmAuthConstructor {
-  new (osmAuthConfig) : osmauthInstance
+  new (osmAuthConfig) : osmAuthInstance
 }
 
-interface osmauthInstance {
-  logout():osmauthInstance,
+interface osmAuthInstance {
+  logout():osmAuthInstance,
   authenticated():boolean,
-  authenticate(callback:(err, oauth:osmauthInstance) => any),
+  authenticate(callback:(err, oauth:osmAuthInstance) => any),
   xhr(option:osmAuthXHROptions, callback:(err, xhr:any) => any)
   options(option:osmAuthConfig),
-  bootstrapToken(oauth_token:string, callback:(err, oauth:osmauthInstance) => any)
+  bootstrapToken(oauth_token:string, callback:(err, oauth:osmAuthInstance) => any)
 }
 
 interface osmAuthConfig {
@@ -26,7 +26,7 @@ interface osmAuthConfig {
 
 interface osmAuthXHROptions {
   path: string,
-  method: string,
+  method: 'POST' | 'PUT' | 'GET',
   content ?: string,
   options ?: {},
 }

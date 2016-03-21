@@ -25,10 +25,6 @@ interface Window {
   webkitIDBCursor?: IDBCursor
 }
 
-interface HTMLTemplateElement extends HTMLElement {
-  content : HTMLFrameElement,
-}
-
 interface HTMLTimeElement extends HTMLElement {
   dateTime : String,
 }
