@@ -29,21 +29,23 @@ import {coordinateCalc} from './coordinate-calc';
             'unique' : false,
             'multiEntry' : false,
           }
-        )
+        );
+
+        notesStore.createIndex(
+          'modifiedIdx',
+          'modified',
+          {
+            'unique' : false,
+            'multiEntry' : false,
+          }
+        );
+
         let commentsStore = idbService.createObjectStore('comments', ['noteId', 'commentNum'], false);
         commentsStore.createIndex(
           'noteIdIdx',
           'noteId',
           {
             'unique' : false,
-            'multiEntry' : false,
-          }
-        );
-        commentsStore.createIndex(
-          'threadCommentIdx',
-          ['noteId', 'commentNum'],
-          {
-            'unique' : true,
             'multiEntry' : false,
           }
         );
@@ -147,18 +149,63 @@ import {coordinateCalc} from './coordinate-calc';
       let commentsOS = trans.objectStore('comments');
 
       for(let i = 0, notesCnt = notesXML.length; i < notesCnt; ++i){
+        let lastModified = new Date(0);
+        let noteId = notesXML[i].querySelector('id').textContent;
+
+        let commentList = notesXML[i].querySelectorAll('comments > comment');
+        let comments = [];
+        for(let j = 0, commentCnt = commentList.length; j < commentCnt; ++j){
+          let date = commentList[j].querySelector('date').textContent;
+          let text = commentList[j].querySelector('text').textContent;
+          let action = commentList[j].querySelector('action').textContent;
+
+          let user = '';
+          let userURL = '';
+          if (commentList[j].querySelector('user')) {
+            user = commentList[j].querySelector('user').textContent;
+            userURL = commentList[j].querySelector('user_url').textContent;
+          }
+
+          let commentDate = new Date(Date.parse(`${date.split(' ').slice(0, 2).join('T')}+0000`));
+          let commentResult = commentsOS.put({
+            'noteId' : +noteId,
+            'commentNum' : j,
+            'date' : commentDate,
+            'user' : user,
+            'userURL' : userURL,
+            'text' : text,
+            'action' : action,
+          });
+
+          commentResult.addEventListener(
+            'success',
+            function(event){
+            }
+          )
+
+          commentResult.addEventListener(
+            'error',
+            function(event){
+              console.warn(event);
+            }
+          )
+          if (commentDate > lastModified) {
+            lastModified = commentDate;
+          }
+        }
+
         let latlng = {
           lat : notesXML[i].getAttribute('lat'),
           lng : notesXML[i].getAttribute('lon'),
         }
 
-        let noteId = notesXML[i].querySelector('id').textContent;
         let created = notesXML[i].querySelector('date_created').textContent;
         let status = notesXML[i].querySelector('status').textContent;
         let notesResult = notesOS.put({
           'latlng' : latlng,
           'id' : +noteId,
           'created' : new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
+          'modified' : new Date(lastModified.getTime()),
           'status' : status,
         });
 
@@ -191,55 +238,17 @@ import {coordinateCalc} from './coordinate-calc';
         notesResult.addEventListener(
           'success',
           function(event){
-            console.log(event, notesResult);
           }
         )
 
         notesResult.addEventListener(
           'error',
           function(event){
-            console.log(event.error);
+            console.error(event.error);
           }
         )
-
-        let commentList = notesXML[i].querySelectorAll('comments > comment');
-        let comments = [];
-        for(let j = 0, commentCnt = commentList.length; j < commentCnt; ++j){
-          let date = commentList[j].querySelector('date').textContent;
-          let text = commentList[j].querySelector('text').textContent;
-          let action = commentList[j].querySelector('action').textContent;
-
-          let user = '';
-          let userURL = '';
-          if (commentList[j].querySelector('user')) {
-            user = commentList[j].querySelector('user').textContent;
-            userURL = commentList[j].querySelector('user_url').textContent;
-          }
-          let commentResult = commentsOS.put({
-            'noteId' : +noteId,
-            'commentNum' : j,
-            'date' : new Date(Date.parse(`${date.split(' ').slice(0, 2).join('T')}+0000`)),
-            'user' : user,
-            'userURL' : userURL,
-            'text' : text,
-            'action' : action,
-          });
-
-          commentResult.addEventListener(
-            'success',
-            function(event){
-              console.log(event, commentResult);
-            }
-          )
-
-          commentResult.addEventListener(
-            'error',
-            function(event){
-              console.warn(event);
-            }
-          )
-        }
       }
+
       markers.addTo(map);
     }
 
@@ -264,9 +273,13 @@ import {coordinateCalc} from './coordinate-calc';
             let noteSection = noteTemplate.content.querySelector('section');
             noteSection.id = `note-${noteId}`;
             noteTemplate.content.querySelector('.create-date').firstChild.textContent = 'メモ作成日：';
-            let created = (<HTMLTimeElement>noteTemplate.content.querySelector('time'));
+            let created = (<HTMLTimeElement>noteTemplate.content.querySelector('.create-date > time'));
             created.dateTime = (<Date>noteCursorVal.value.created).toISOString();
             created.textContent = (<Date>noteCursorVal.value.created).toLocaleString();
+            noteTemplate.content.querySelector('.modified-date').firstChild.textContent = 'メモ更新日：';
+            let modified = (<HTMLTimeElement>noteTemplate.content.querySelector('.modified-date > time'));
+            modified.dateTime = (<Date>noteCursorVal.value.modified).toISOString();
+            modified.textContent = (<Date>noteCursorVal.value.modified).toLocaleString();
 
             noteSection.querySelector('form').id = `${noteSection.id}-form`;
 
@@ -369,7 +382,6 @@ import {coordinateCalc} from './coordinate-calc';
                   params,
                   (err, xhr) => {
                     if (err === null) {
-                      console.log(xhr, 'XHR');
                       (<any>(<HTMLElement>select).dataset).currentStatus = 'closed';
                       resolve({action : 'closed', noteId : noteId, response : xhr});
                     }
@@ -399,7 +411,6 @@ import {coordinateCalc} from './coordinate-calc';
                   params,
                   (err, xhr) => {
                     if (err === null) {
-                      console.log(xhr, 'XHR');
                       (<any>(<HTMLElement>select).dataset).currentStatus = 'opened';
                       resolve({action : 'reopened', noteId : noteId, response : xhr});
                     }
@@ -430,7 +441,6 @@ import {coordinateCalc} from './coordinate-calc';
               params,
               (err, responseXML) => {
                 if (err === null) {
-                  console.log(responseXML, 'XHR');
                   resolve({action : 'commented', noteId : noteId, response : responseXML});
                 }
                 else {
@@ -459,33 +469,12 @@ import {coordinateCalc} from './coordinate-calc';
           let notesOS = trans.objectStore('notes');
           let commentsOS = trans.objectStore('comments');
           let isOpened = true;
+          let lastModified = new Date(0);
+
+          let lastCommentsCount = 0;
+          let storedCommentsCount = 0;
 
           let response = <XMLDocument>xhrResult.response;
-
-          if (xhrResult.action !== 'commented') {
-            console.log(xhrResult ,'変更');
-
-            let latlng = {
-              lat : response.querySelector('note').getAttribute('lat'),
-              lng : response.querySelector('note').getAttribute('lon'),
-            }
-
-            let created = response.querySelector('date_created').textContent;
-            let status = response.querySelector('status').textContent;
-
-            let notesResult = notesOS.put({
-              'latlng' : latlng,
-              'id' : +noteId,
-              'created' : new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
-              'status' : status,
-            });
-
-
-            if(xhrResult.action === 'closed'){
-              isOpened = false;
-            }
-          }
-
           let commentsIdx = commentsOS.index('noteIdIdx');
 
           let noteKeyRange = IDBKeyRange.only(noteId);
@@ -493,21 +482,19 @@ import {coordinateCalc} from './coordinate-calc';
 
           noteCommentsRequest.onsuccess = (
             () => {
-              console.log(arguments);
-              let storedCommentsCount = noteCommentsRequest.result;
+              storedCommentsCount = noteCommentsRequest.result;
 
               let lastComments = response.querySelectorAll('comments > comment');
-              let lastCommentsCount = response.querySelectorAll('comments > comment').length;
+              lastCommentsCount = response.querySelectorAll('comments > comment').length;
 
-              let successCommentsCount = 0;
 
-              console.log(storedCommentsCount);
               for (let i = storedCommentsCount; i < lastCommentsCount; ++i) {
                 let comment = lastComments[i];
+                let commentDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
                 let commentResult = commentsOS.add({
                   'noteId' : +noteId,
                   'commentNum' : i,
-                  'date' : new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`)),
+                  'date' : commentDate,
                   'user' : comment.querySelector('user').textContent,
                   'userURL' : comment.querySelector('user_url').textContent,
                   'text' : comment.querySelector('text').textContent,
@@ -516,28 +503,20 @@ import {coordinateCalc} from './coordinate-calc';
 
                 commentResult.addEventListener(
                   'success',
-                  function(event){
-                    ++successCommentsCount;
-
-                    if (successCommentsCount === lastCommentsCount - storedCommentsCount) {
-                      return resolve({
-                        'displayedCommentsCount' : storedCommentsCount,
-                        'currentStoredCommentsCount' : lastCommentsCount,
-                        'responseXML' : response,
-                        'noteId' : +noteId,
-                        'isOpened' : isOpened,
-                      });
-                    }
-                  }
+                  (event) => {}
                 )
 
                 commentResult.addEventListener(
                   'error',
-                  function(event){
+                  (event) => {
                     console.warn(event);
                     return reject(event);
                   }
                 )
+
+                if (commentDate > lastModified) {
+                  lastModified = commentDate;
+                }
               }
 
             }
@@ -547,6 +526,42 @@ import {coordinateCalc} from './coordinate-calc';
             (event) => {
               console.warn(event);
               return reject(event);
+            }
+          );
+
+          if (xhrResult.action !== 'commented') {
+            if(xhrResult.action === 'closed'){
+              isOpened = false;
+            }
+          }
+
+          let latlng = {
+            lat : response.querySelector('note').getAttribute('lat'),
+            lng : response.querySelector('note').getAttribute('lon'),
+          }
+
+          let created = response.querySelector('date_created').textContent;
+          let status = response.querySelector('status').textContent;
+
+          let notesResult = notesOS.put({
+            'latlng' : latlng,
+            'id' : +noteId,
+            'created' : new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
+            'modified' : new Date(lastModified.getTime()),
+            'status' : status,
+          });
+
+          notesResult.addEventListener(
+            'success',
+            (event) => {
+              return resolve({
+                'displayedCommentsCount' : storedCommentsCount,
+                'currentStoredCommentsCount' : lastCommentsCount,
+                'responseXML' : response,
+                'lastModified' : lastModified,
+                'noteId' : +noteId,
+                'isOpened' : isOpened,
+              });
             }
           );
         }
@@ -561,7 +576,13 @@ import {coordinateCalc} from './coordinate-calc';
       let noteId = updateResult.noteId;
       let noteIsOpened = updateResult.isOpened;
       let response = <XMLDocument>updateResult.responseXML;
+      let lastModified = <Date>updateResult.lastModified;
       let comments = response.querySelectorAll('comments > comment');
+
+      document.querySelector(`#note-${noteId} .status`).textContent = response.querySelector('status').textContent;
+      let noteModifiedElement = <HTMLTimeElement>document.querySelector(`#note-${noteId} span.modified-date > time`);
+      noteModifiedElement.dateTime = lastModified.toISOString();
+      noteModifiedElement.textContent = lastModified.toLocaleString();
 
       for (let i = displayedCommentCount; i < currentStoredCommentsCount; i++) {
         let comment = comments[i];
@@ -586,12 +607,6 @@ import {coordinateCalc} from './coordinate-calc';
       }
 
       (<HTMLTextAreaElement>document.querySelector(`#note-${noteId}-addNoteComment`)).value = '';
-      if (noteIsOpened) {
-        ;
-      }
-      else {
-        ;
-      }
     }
 
     let button = document.getElementById('get-near-notes');
@@ -603,15 +618,12 @@ import {coordinateCalc} from './coordinate-calc';
             getNotes,
             (error) => console.error(error)
           ).then(
-            function(success){
-              setNotesList(success);
-            },
+            setNotesList,
             (error) => console.error(error)
           );
         }
         else {
           auth.bootstrapToken('', (err, oauth) => console.info(arguments));
-          auth.authenticate(() => console.log(arguments));
         }
       }
     );
