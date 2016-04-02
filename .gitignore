@@ -2,7 +2,7 @@
 /src/ts/typings
 .DS_Store
 Thumb.db
-/config/config.js
-/config/test.config.js
+/config/config.json
+/config/test.config.json
 /typings
 /temp
