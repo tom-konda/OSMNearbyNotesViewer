@@ -1,8 +1,9 @@
 /node_modules
-/src/ts/typings
 .DS_Store
 Thumb.db
 /config/config.json
 /config/test.config.json
 /typings
 /temp
+/src/ts/webworker
+/build
