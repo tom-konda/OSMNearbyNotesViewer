@@ -7,7 +7,10 @@
     "sweetalert": "github:DefinitelyTyped/DefinitelyTyped/sweetalert/sweetalert.d.ts#98b4177d24ed2b5679d395c832ef337bd0b17c1c"
   },
   "ambientDevDependencies": {
-    "jade": "github:DefinitelyTyped/DefinitelyTyped/jade/jade.d.ts#c69185b594b5a846b84ce1f89864b44cda727df1"
+    "jade": "github:DefinitelyTyped/DefinitelyTyped/jade/jade.d.ts#c69185b594b5a846b84ce1f89864b44cda727df1",
+    "mocha": "registry:dt/mocha#2.2.5+20160317120654",
+    "power-assert": "registry:dt/power-assert#0.0.0+20160316155526",
+    "xml2js": "registry:dt/xml2js#0.0.0+20160317120654"
   },
   "dependencies": {
     "es6-promise": "github:typed-typings/npm-es6-promise#fb04188767acfec1defd054fc8024fafa5cd4de7"

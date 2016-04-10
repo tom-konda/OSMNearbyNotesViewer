@@ -4,7 +4,7 @@
   "files.encoding": "utf8",
 	"files.exclude": {
 		"node_modules" : true,
-		"src/ts/typings" : true,
+		"typings/**" : true,
 		"dist/**" : true,
 		"**/.git": true,
 		"**/.DS_Store": true,

@@ -1,11 +1,10 @@
 {
   "name": "osmnearbynotesviewer",
   "version": "0.0.1",
-  "description": "OpenStreetMapのユーザが登録した近辺のNotesを取得して返信できる",
-  "main": "index.js",
+  "description": "Reply to OSM Notes like comment form around home location.",
   "scripts": {
     "prebuild": "npm run clean",
-    "build": "node -e \"require('shelljs').exec('npm-run-all ts:build-* jade mkdir-builddir browserify');\"",
+    "build": "node -e \"require('shelljs').exec('npm-run-all ts:build-* test jade mkdir-builddir browserify');\"",
     "postbuild": "node -e \"require('shelljs').exec('npm-run-all copy-*');\"",
     "clean": "node -e \"require('shelljs').rm('-R', ['temp', 'build']);\"",
     "copy-src": "node -e \"require('shelljs').cp('-R', 'src/css', 'build')\"",
@@ -13,10 +12,11 @@
     "mkdir-builddir": "node -e \"require('shelljs').mkdir('build/js');\"",
     "browserify": "node -e \"require('shelljs').exec('browserify --entry ./temp/browser/main.js -o build/js/main.js');\"",
     "ts:build-browser": "tsc -p ./src/ts/browser",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node -e \"require('shelljs').exec('mocha --require ./src/test/espower-typescript-loader src/test/**.ts');\""
   },
   "keywords": [
-    "OpenStreetMap"
+    "OpenStreetMap",
+    "OSM"
   ],
   "author": "tom-konda",
   "license": "MIT",
@@ -30,13 +30,15 @@
     "espower-typescript": "^4.1.0",
     "jade": "^1.11.0",
     "mocha": "^2.4.5",
+    "node-sass": "^3.4.2",
     "npm-run-all": "^1.5.1",
     "power-assert": "^1.2.0",
     "shelljs": "^0.6.0",
     "should": "^8.2.2",
     "tslint": "^3.5.0",
     "tslint-eslint-rules": "^1.0.1",
-    "typedoc": "^0.3.12"
+    "typedoc": "^0.3.12",
+    "xml2js": "^0.4.16"
   },
   "engines": {
     "node": ">=4.3.0"
