@@ -43,12 +43,12 @@ export namespace coordinateCalc {
     const CARRY_LONGITUDE = 360
 
     /*
-      南北 θ = (d * 180) / (PI * R)
-      東西 θ = (d * 180) / (PI * r')
-      d = 指定POIからの距離
-      R = 地球の極半径
-      r' = R'cos(指定POIの緯度)
-      R' = 地球の赤道半径
+      North-south θ = (d * 180) / (PI * R)
+      East-west θ = (d * 180) / (PI * r')
+      d = Distance from POI to north-south direction or east-west direction
+      R = Eatth Polar Radius
+      r' = R' * cos( Latitude of POI )
+      R' = Earth Equator Radius
     */
     edgeCoordinate.n = getLatitudeFromDistance(latitude, distance, true);
     edgeCoordinate.s = getLatitudeFromDistance(latitude, distance, false);
