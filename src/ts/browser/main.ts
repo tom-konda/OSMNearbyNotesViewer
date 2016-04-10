@@ -1,5 +1,6 @@
 'use strict';
 let osmAuth:osmAuthConstructor = require('osm-auth');
+let authConfig = <oauthJSONConfig>require('../../config/config.json');
 require('es6-promise').polyfill();
 require('leaflet.icon.glyph');
 import {IDBService} from './indexeddb-class';
@@ -15,10 +16,6 @@ import {coordinateCalc} from './coordinate-calc';
     'upgradeneeded',
     function(event) {
       let oldVersion = event.oldVersion;
-      /*
-        iOS 8 は挙動が変なので注意
-        ref http://webos-goodies.jp/archives/5_pitfalls_of_indexeddb_on_ios8.html
-      */
       if(oldVersion < 1) {
         // Create new indexedDB
         let notesStore = idbService.createObjectStore('notes', 'id', false);
@@ -57,7 +54,6 @@ import {coordinateCalc} from './coordinate-calc';
   idbReq.addEventListener(
     'success',
     function(event) {
-      // this.db = (<IDBRequest>event.target).result;
     }
   );
 
@@ -81,13 +77,6 @@ import {coordinateCalc} from './coordinate-calc';
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
       attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
     }).addTo(map);
-
-    let authConfig:osmAuthConfig = {
-      url : 'http://api06.dev.openstreetmap.org',
-      oauth_consumer_key: 'nxoVnBJUnzEexg9MMw8fJfeNfIrewJPa5uCOY9Md',
-      oauth_secret: 'dxg765uScWbTRyh9l7BDoyxTw0FOplCthjZfHfLJ',
-      auto: true,
-    };
 
     let auth = new osmAuth(authConfig);
 
@@ -623,7 +612,7 @@ import {coordinateCalc} from './coordinate-calc';
           );
         }
         else {
-          auth.bootstrapToken('', (err, oauth) => console.info(arguments));
+          auth.authenticate(() => {console.log(arguments)});
         }
       }
     );
