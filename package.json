@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Reply to OSM Notes like comment form around home location.",
   "scripts": {
+    "postinstall": "node -e \"require('shelljs').exec('typings install');\"",
     "prebuild": "npm run clean",
     "build": "node -e \"require('shelljs').exec('npm-run-all ts:build-* test jade mkdir-builddir browserify');\"",
     "postbuild": "node -e \"require('shelljs').exec('npm-run-all copy-*');\"",
