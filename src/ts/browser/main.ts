@@ -485,12 +485,19 @@ import {coordinateCalc} from './coordinate-calc';
               for (let i = storedCommentsCount; i < lastCommentsCount; ++i) {
                 let comment = lastComments[i];
                 let commentDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
+
+                let user = '';
+                let userURL = '';
+                if (comment.querySelector('user')) {
+                  user = comment.querySelector('user').textContent;
+                  userURL = comment.querySelector('user_url').textContent;
+                }
                 let commentResult = commentsOS.add({
                   'noteId' : +noteId,
                   'commentNum' : i,
                   'date' : commentDate,
-                  'user' : comment.querySelector('user').textContent,
-                  'userURL' : comment.querySelector('user_url').textContent,
+                  'user' : user,
+                  'userURL' : userURL,
                   'text' : comment.querySelector('text').textContent,
                   'action' : comment.querySelector('action').textContent,
                 });
