@@ -324,21 +324,26 @@ import {coordinateCalc} from './coordinate-calc';
                 }
                 else {
                   let commCursorVal = (<IDBCursorWithValue>commentCursor.result);
-                  let commentText = commentTemplate.content.querySelector('p.commentText');
+
+                  let comment = <HTMLElement>document.importNode(commentTemplate.content, true);
+                  let commentText = comment.querySelector('p.commentText');
                   commentText.textContent = commCursorVal.value.text;
-                  let commentDate = (<HTMLTimeElement>commentTemplate.content.querySelector('time'));
+                  let commentDate = (<HTMLTimeElement>comment.querySelector('time'));
                   commentDate.dateTime = (<Date>commCursorVal.value.date).toISOString();
                   commentDate.textContent = (<Date>commCursorVal.value.date).toLocaleString();
-                  let userAction = commentTemplate.content.querySelector('.user-action');
+                  let userAction = comment.querySelector('.user-action');
                   userAction.textContent = `${commCursorVal.value.action}`;
 
                   if (commCursorVal.value.user) {
-                    let userOSMPage = (<HTMLAnchorElement>commentTemplate.content.querySelector('a'));
+                    let userOSMPage = (<HTMLAnchorElement>comment.querySelector('span.user-osm-page > a'));
                     userOSMPage.textContent = commCursorVal.value.user;
                     userOSMPage.href = commCursorVal.value.userURL;
                   }
-
-                  let comment = document.importNode(commentTemplate.content, true);
+                  else {
+                    let userOSMPage = (<HTMLSpanElement>comment.querySelector('span.user-osm-page'));
+                    userOSMPage.removeChild(userOSMPage.querySelector('a'));
+                    userOSMPage.textContent = 'annonymous user';
+                  }
                   document.querySelector(`#note-${noteCursorVal.value.id} > div`).appendChild(comment);
                   commCursorVal.advance(1);
                 }
@@ -576,22 +581,27 @@ import {coordinateCalc} from './coordinate-calc';
       for (let i = displayedCommentCount; i < currentStoredCommentsCount; i++) {
         let comment = comments[i];
 
-        let commentText = commentTemplate.content.querySelector('p.commentText');
+        let commentDOM = <HTMLElement>document.importNode(commentTemplate.content, true);
+
+        let commentText = commentDOM.querySelector('p.commentText');
         commentText.textContent = comment.querySelector('text').textContent;
-        let commentDate = (<HTMLTimeElement>commentTemplate.content.querySelector('time'));
+        let commentDate = (<HTMLTimeElement>commentDOM.querySelector('time'));
         let xmlDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
         commentDate.dateTime = xmlDate.toISOString();
         commentDate.textContent = xmlDate.toLocaleString();
-        let userAction = commentTemplate.content.querySelector('.user-action');
+        let userAction = commentDOM.querySelector('.user-action');
         userAction.textContent = comment.querySelector('action').textContent;
 
         if (comment.querySelector('user')) {
-          let userOSMPage = (<HTMLAnchorElement>commentTemplate.content.querySelector('a'));
+          let userOSMPage = (<HTMLAnchorElement>commentDOM.querySelector('span.user-osm-page > a'));
           userOSMPage.textContent = comment.querySelector('user').textContent;
           userOSMPage.href = comment.querySelector('user_url').textContent;
         }
-
-        let commentDOM = document.importNode(commentTemplate.content, true);
+        else {
+          let userOSMPage = (<HTMLSpanElement>commentDOM.querySelector('span.user-osm-page'));
+          userOSMPage.removeChild(userOSMPage.querySelector('a'));
+          userOSMPage.textContent = 'annonymous user';
+        }
         document.querySelector(`#note-${noteId} > div`).appendChild(commentDOM);
       }
 
