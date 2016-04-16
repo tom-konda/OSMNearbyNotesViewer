@@ -6,7 +6,7 @@
     "postinstall": "node -e \"require('shelljs').exec('typings install');\"",
     "prebuild": "npm run clean",
     "build": "node -e \"require('shelljs').exec('npm-run-all ts:build-* test jade mkdir-builddir browserify');\"",
-    "postbuild": "node -e \"require('shelljs').exec('npm-run-all copy-* clean');\"",
+    "postbuild": "node -e \"require('shelljs').exec('npm-run-all copy-*');\"",
     "clean": "node -e \"require('shelljs').rm('-R', ['temp', 'build']);\"",
     "copy-src": "node -e \"require('shelljs').cp('-R', 'src/css', 'build')\"",
     "jade": "node -e \"require('shelljs').exec('jade src/views -P -o build');\"",
