@@ -40,6 +40,7 @@
     "tslint": "^3.5.0",
     "tslint-eslint-rules": "^1.0.1",
     "typedoc": "^0.3.12",
+    "typings": "^0.7.12",
     "xml2js": "^0.4.16"
   },
   "engines": {
