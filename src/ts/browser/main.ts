@@ -8,7 +8,7 @@ import {coordinateCalc} from './coordinate-calc';
 
 (function(){
 
-  let idbService = IDBService;
+  var idbService = IDBService;
 
   let idbReq = idbService.openDB('osmNearNotes', 1);
 
@@ -142,7 +142,6 @@ import {coordinateCalc} from './coordinate-calc';
         let noteId = notesXML[i].querySelector('id').textContent;
 
         let commentList = notesXML[i].querySelectorAll('comments > comment');
-        let comments = [];
         for(let j = 0, commentCnt = commentList.length; j < commentCnt; ++j){
           let date = commentList[j].querySelector('date').textContent;
           let text = commentList[j].querySelector('text').textContent;
@@ -481,7 +480,6 @@ import {coordinateCalc} from './coordinate-calc';
               let lastComments = response.querySelectorAll('comments > comment');
               lastCommentsCount = response.querySelectorAll('comments > comment').length;
 
-
               for (let i = storedCommentsCount; i < lastCommentsCount; ++i) {
                 let comment = lastComments[i];
                 let commentDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
@@ -575,7 +573,6 @@ import {coordinateCalc} from './coordinate-calc';
       let currentStoredCommentsCount = updateResult.currentStoredCommentsCount;
       let commentTemplate = (<HTMLTemplateElement>document.querySelector('#comment-content'));
       let noteId = updateResult.noteId;
-      let noteIsOpened = updateResult.isOpened;
       let response = <XMLDocument>updateResult.responseXML;
       let lastModified = <Date>updateResult.lastModified;
       let comments = response.querySelectorAll('comments > comment');

@@ -20,7 +20,7 @@ export namespace IDBService {
         let objStoreNameList = (<DOMStringList>(<IDBRequest>event.target).result.objectStoreNames);
         let i = 0;
         let cnt = objStoreNameList.length;
-        for( ; i < cnt;++i){
+        for( ; i < cnt; ++i){
           if(_tables.indexOf(objStoreNameList.item(i)) === -1){
             _tables.push(objStoreNameList.item(i));
           }

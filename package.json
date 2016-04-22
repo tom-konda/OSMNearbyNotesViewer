@@ -4,11 +4,12 @@
   "description": "Reply to OSM Notes like comment form around home location.",
   "scripts": {
     "postinstall": "node -e \"require('shelljs').exec('typings install');\"",
-    "prebuild": "npm run clean",
+    "prebuild": "node -e \"require('shelljs').exec('npm-run-all clean tslint:*');\"",
     "build": "node -e \"require('shelljs').exec('npm-run-all ts:build-* test jade mkdir-builddir browserify');\"",
     "postbuild": "node -e \"require('shelljs').exec('npm-run-all copy-*');\"",
     "clean": "node -e \"require('shelljs').rm('-R', ['temp', 'build']);\"",
     "copy-src": "node -e \"require('shelljs').cp('-R', 'src/css', 'build')\"",
+    "tslint:browser" : "node -e \"require('shelljs').exec('tslint ./src/ts/browser/**.ts');\"",
     "jade": "node -e \"require('shelljs').exec('jade src/views -P -o build');\"",
     "mkdir-builddir": "node -e \"require('shelljs').mkdir('build/js');\"",
     "browserify": "node -e \"require('shelljs').exec('browserify --entry ./temp/browser/main.js -o build/js/main.js');\"",

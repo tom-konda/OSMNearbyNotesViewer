@@ -6,7 +6,6 @@
       "spaces"
     ],
     "no-var-keyword": true,
-    "no-var-requires": true,
     "no-consecutive-blank-lines" : true,
     "no-constant-condition": true,
     "no-trailing-whitespace": true,
