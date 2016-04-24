@@ -623,18 +623,15 @@ import {coordinateCalc} from './coordinate-calc';
           ).then(
             setNotesList,
             (error) => console.error(error)
+          ).then(
+            displayNoteAndComment,
+            (error) => console.error(error)
           );
         }
         else {
           auth.authenticate(() => {console.log(arguments)});
         }
       }
-    );
-
-    let dispButton = document.getElementById('display');
-    dispButton.addEventListener(
-      'click',
-      displayNoteAndComment
     );
   });
 
