@@ -8,7 +8,7 @@ import {coordinateCalc} from './coordinate-calc';
 
 (function(){
 
-  var idbService = IDBService;
+  let idbService = IDBService;
 
   let idbReq = idbService.openDB('osmNearNotes', 1);
 
@@ -343,7 +343,7 @@ import {coordinateCalc} from './coordinate-calc';
                     userOSMPage.removeChild(userOSMPage.querySelector('a'));
                     userOSMPage.textContent = 'annonymous user';
                   }
-                  document.querySelector(`#note-${noteCursorVal.value.id} > div`).appendChild(comment);
+                  document.querySelector(`#note-${noteCursorVal.value.id} > div > .comment-list`).appendChild(comment);
                   commCursorVal.advance(1);
                 }
               }
@@ -606,7 +606,7 @@ import {coordinateCalc} from './coordinate-calc';
           userOSMPage.removeChild(userOSMPage.querySelector('a'));
           userOSMPage.textContent = 'annonymous user';
         }
-        document.querySelector(`#note-${noteId} > div`).appendChild(commentDOM);
+        document.querySelector(`#note-${noteId} > div > .comment-list`).appendChild(commentDOM);
       }
 
       (<HTMLTextAreaElement>document.querySelector(`#note-${noteId}-addNoteComment`)).value = '';
