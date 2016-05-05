@@ -4155,15 +4155,35 @@ is.string = function (value) {
 
 
 },{"foreach":11,"is":12}],14:[function(require,module,exports){
-;(function(win){
+(function (global){
+"use strict"
+// Module export pattern from
+// https://github.com/umdjs/umd/blob/master/returnExports.js
+;(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define([], factory);
+    } else if (typeof exports === 'object') {
+        // Node. Does not work with strict CommonJS, but
+        // only CommonJS-like environments that support module.exports,
+        // like Node.
+        module.exports = factory();
+    } else {
+        // Browser globals (root is window)
+        root.store = factory();
+  }
+}(this, function () {
+	
+	// Store.js
 	var store = {},
+		win = (typeof window != 'undefined' ? window : global),
 		doc = win.document,
 		localStorageName = 'localStorage',
 		scriptTag = 'script',
 		storage
 
 	store.disabled = false
-	store.version = '1.3.17'
+	store.version = '1.3.20'
 	store.set = function(key, value) {}
 	store.get = function(key, defaultVal) {}
 	store.has = function(key) { return store.get(key) !== undefined }
@@ -4227,7 +4247,7 @@ is.string = function (value) {
 				callback(key, store.get(key))
 			}
 		}
-	} else if (doc.documentElement.addBehavior) {
+	} else if (doc && doc.documentElement.addBehavior) {
 		var storageOwner,
 			storageContainer
 		// Since #userData storage applies only to specific paths, we need to
@@ -4272,7 +4292,7 @@ is.string = function (value) {
 		// See https://github.com/marcuswestin/store.js/issues/40
 		// See https://github.com/marcuswestin/store.js/issues/83
 		var forbiddenCharsRegex = new RegExp("[!\"#$%&'()*+,/\\\\:;<=>?@[\\]^`{|}~]", "g")
-		function ieKeyFix(key) {
+		var ieKeyFix = function(key) {
 			return key.replace(/^d/, '___$&').replace(forbiddenCharsRegex, '___')
 		}
 		store.set = withIEStorage(function(storage, key, val) {
@@ -4295,8 +4315,8 @@ is.string = function (value) {
 		store.clear = withIEStorage(function(storage) {
 			var attributes = storage.XMLDocument.documentElement.attributes
 			storage.load(localStorageName)
-			for (var i=0, attr; attr=attributes[i]; i++) {
-				storage.removeAttribute(attr.name)
+			for (var i=attributes.length-1; i>=0; i--) {
+				storage.removeAttribute(attributes[i].name)
 			}
 			storage.save(localStorageName)
 		})
@@ -4324,13 +4344,11 @@ is.string = function (value) {
 		store.disabled = true
 	}
 	store.enabled = !store.disabled
+	
+	return store
+}));
 
-	if (typeof module != 'undefined' && module.exports && this.module !== module) { module.exports = store }
-	else if (typeof define === 'function' && define.amd) { define(store) }
-	else { win.store = store }
-
-})(Function('return this')());
-
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],15:[function(require,module,exports){
 module.exports = extend
 
@@ -4487,7 +4505,7 @@ require('leaflet.icon.glyph');
 const indexeddb_class_1 = require('./indexeddb-class');
 const coordinate_calc_1 = require('./coordinate-calc');
 (function () {
-    var idbService = indexeddb_class_1.IDBService;
+    let idbService = indexeddb_class_1.IDBService;
     let idbReq = idbService.openDB('osmNearNotes', 1);
     idbReq.addEventListener('upgradeneeded', function (event) {
         let oldVersion = event.oldVersion;
@@ -4729,7 +4747,7 @@ const coordinate_calc_1 = require('./coordinate-calc');
                                 userOSMPage.removeChild(userOSMPage.querySelector('a'));
                                 userOSMPage.textContent = 'annonymous user';
                             }
-                            document.querySelector(`#note-${noteCursorVal.value.id} > div`).appendChild(comment);
+                            document.querySelector(`#note-${noteCursorVal.value.id} > div > .comment-list`).appendChild(comment);
                             commCursorVal.advance(1);
                         }
                     });
@@ -4936,7 +4954,7 @@ const coordinate_calc_1 = require('./coordinate-calc');
                     userOSMPage.removeChild(userOSMPage.querySelector('a'));
                     userOSMPage.textContent = 'annonymous user';
                 }
-                document.querySelector(`#note-${noteId} > div`).appendChild(commentDOM);
+                document.querySelector(`#note-${noteId} > div > .comment-list`).appendChild(commentDOM);
             }
             document.querySelector(`#note-${noteId}-addNoteComment`).value = '';
         };

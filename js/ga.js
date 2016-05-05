@@ -12,36 +12,41 @@ ga('send', 'pageview');
     var target = document.querySelector('#note-list');
     var noteLoadedEvent = new Event('notesLoaded');
     var observer = new MutationObserver(
-      function() {
-        document.body.dispatchEvent(noteLoadedEvent);
-      }
-    );
-    
-    observer.observe(target, {childList: true});
-    
-    document.body.addEventListener(
-      'notesLoaded',
-      function() {
-        observer.disconnect();
-        document.body.removeEventListener('notesLoaded');
-        observer = null;
-        
-        var notes = document.querySelectorAll('#note-list > .note');
-        var noteNum = notes.length;
-        var notesArray = Array.prototype.slice.call(notes);
-        var notesObservers = [];
-        notesArray.forEach(
-          function(note, index) {
-            noteObservers[index] = new MutationObserver(
-              /**
-               * ga exec
-               */
+      function(mutations) {
+        mutations.forEach(
+          function(mutation) {
+            var addedNodes = mutation.addedNodes;
+            var addedNodesArray = Array.prototype.slice.call(addedNodes);
+            var addedElements = addedNodesArray.filter(
+              function (node) {
+                return node.nodeType === 1;
+              }
             );
-            
-            notesObservers[index].observe(note, {childList: true});
+            addedElements.forEach(
+              function(element) {
+                var noteForm = document.querySelector(`#${element.id}-form`);
+                noteForm.addEventListener(
+                  'submit',
+                  function (event) {
+                    var noteId = this.id.split('-')[1];
+                    var comments = document.querySelectorAll(`#note-${noteId} > div > .comment-list > article`);
+                    var values = [];
+                    for(var i = 0, cnt = this.length; i < cnt; ++i) {
+                      values[i] = this[i].value;
+                    }
+                    var action = values[0] || 'commented';
+                    ga('send', 'event', 'OSMNote', action, noteId, comments.length);
+                    console.log([action, noteId, comments.length])
+                  },
+                  false
+                );
+              }
+            );
           }
         );
       }
     );
+    
+    observer.observe(target, {childList: true});
   }
 )();
