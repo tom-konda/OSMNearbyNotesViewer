@@ -24,3 +24,6 @@ OpenStreetMap で登録したホーム地点の周辺にある地図メモを閲
 3. config ディレクトリに、default.config.json を元に config.json および、 test.config.json を設置します
 4. `npm run build` でビルドします。結果は、build ディレクトリに出力されます
 5. *ローカルでウェブサーバを立てて*、出力された index.html にブラウザでアクセスします
+
+## 動作デモ
+http://tom-konda.github.io/OSMNearbyNotesViewer/
