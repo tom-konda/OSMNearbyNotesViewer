@@ -12,6 +12,6 @@
       "coordinateCalcTest.ts",
       "fixture/default.config.ts",
       "custom_typings/tsd.d.ts",
-      "../../typings/main.d.ts"
+      "../typings/index.d.ts"
     ]
 }

@@ -9,7 +9,7 @@
     },
     "files": [
         "custom_typings/tsd.d.ts",
-        "../../../typings/browser.d.ts",
+        "../../typings/index.d.ts",
         "coordinate-calc.ts",
         "indexeddb-class.ts",
         "main.ts"

@@ -1,20 +1,19 @@
 {
+  "resolution": "src/typings",
   "name": "osmnearbynotesviewer",
-  "ambientDependencies": {
-    "leaflet": "github:DefinitelyTyped/DefinitelyTyped/leaflet/leaflet.d.ts#1ffc055e50f0df255da310485a7871c6f894e370",
-    "leaflet-markercluster": "github:DefinitelyTyped/DefinitelyTyped/leaflet-markercluster/leaflet-markercluster.d.ts#8eca847a131aea253d4f00fc0eacd481c1ef628a",
-    "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#aed176536a202b9a2475ce1989ea6d2d0226a185",
-    "sweetalert": "github:DefinitelyTyped/DefinitelyTyped/sweetalert/sweetalert.d.ts#98b4177d24ed2b5679d395c832ef337bd0b17c1c"
+  "dependencies": {
+    "es6-promise": "registry:npm/es6-promise#3.0.0+20160211003958"
   },
-  "ambientDevDependencies": {
+  "globalDependencies": {
     "empower": "registry:dt/empower#0.0.0+20160317120654",
-    "jade": "github:DefinitelyTyped/DefinitelyTyped/jade/jade.d.ts#c69185b594b5a846b84ce1f89864b44cda727df1",
-    "mocha": "registry:dt/mocha#2.2.5+20160317120654",
+    "jade": "registry:dt/jade#0.0.0+20160316155526",
+    "leaflet": "registry:dt/leaflet#0.7.3+20160412142116",
+    "leaflet-markercluster": "registry:dt/leaflet-markercluster#0.4.0+20160317120654",
+    "mocha": "registry:env/mocha#2.2.5+20160321223601",
+    "node": "registry:env/node#4.0.0+20160507210304",
     "power-assert": "registry:dt/power-assert#0.0.0+20160316155526",
     "power-assert-formatter": "registry:dt/power-assert-formatter#0.0.0+20160317120654",
+    "sweetalert": "registry:dt/sweetalert#1.1.3+20160317120654",
     "xml2js": "registry:dt/xml2js#0.0.0+20160317120654"
-  },
-  "dependencies": {
-    "es6-promise": "github:typed-typings/npm-es6-promise#fb04188767acfec1defd054fc8024fafa5cd4de7"
   }
 }
