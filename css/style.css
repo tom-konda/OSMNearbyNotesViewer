@@ -1,5 +1,5 @@
 article.comment > .commentText {
-  white-space: pre;
+  word-wrap: break-word;
 }
 
 #note-list > section + section {
