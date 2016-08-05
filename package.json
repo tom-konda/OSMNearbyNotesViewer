@@ -5,11 +5,10 @@
   "scripts": {
     "postinstall": "node -e \"require('shelljs').exec('typings install');\"",
     "prebuild": "node -e \"require('shelljs').exec('npm-run-all clean tslint:*');\"",
-    "build": "node -e \"require('shelljs').exec('npm-run-all ts:build-* test pug mkdir-builddir browserify');\"",
-    "postbuild": "node -e \"require('shelljs').exec('npm-run-all copy-*');\"",
+    "build": "node -e \"require('shelljs').exec('npm-run-all ts:build-* test sass:build-* pug mkdir-builddir browserify');\"",
     "clean": "node -e \"require('shelljs').rm('-R', ['temp', 'build']);\"",
-    "copy-src": "node -e \"require('shelljs').cp('-R', 'src/css', 'build')\"",
     "tslint:browser": "node -e \"require('shelljs').exec('tslint ./src/ts/browser/**.ts');\"",
+    "sass:build-pc": "node -e \"require('shelljs').exec('node-sass src/scss/style.scss -o build/css --output-style expanded');\"",
     "pug": "node -e \"require('shelljs').exec('pug -P src/pug --out build');\"",
     "mkdir-builddir": "node -e \"require('shelljs').mkdir('build/js');\"",
     "browserify": "node -e \"require('shelljs').exec('browserify --entry ./temp/browser/main.js -o build/js/main.js');\"",
@@ -25,6 +24,7 @@
   "dependencies": {
     "es6-promise": "^3.1.2",
     "leaflet.icon.glyph": "^0.2.0",
+    "node-sass": "^3.8.0",
     "osm-auth": "^0.2.8"
   },
   "devDependencies": {

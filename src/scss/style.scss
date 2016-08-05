@@ -9,3 +9,15 @@ article.comment > .commentText{
 .note-info > * + *{
   padding-left: 1em;
 }
+
+#note-list {
+  flex: 1;
+}
+
+#map {
+  width: 700px;
+}
+
+#container {
+  display: flex;
+}
