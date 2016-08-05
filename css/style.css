@@ -1,11 +1,24 @@
-article.comment > .commentText{
+article.comment > .commentText {
   white-space: pre;
 }
 
-#note-list > section + section{
-  border-top : 1px solid;
+#note-list > section + section {
+  border-top: 1px solid;
 }
+
 .comment-info > * + *,
-.note-info > * + *{
+.note-info > * + * {
   padding-left: 1em;
+}
+
+#note-list {
+  flex: 1;
+}
+
+#map {
+  width: 700px;
+}
+
+#container {
+  display: flex;
 }

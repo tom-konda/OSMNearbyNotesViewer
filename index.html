@@ -14,10 +14,11 @@
   </head>
   <body>
     <input id="get-near-notes" type="button" value="地図メモの取得・表示">
-    <div id="map" style="width:700px;height:700px"></div>
-    <div id="note-list"></div>
+    <section id="container">
+      <div id="note-list"></div>
+      <div id="map" style="width:700px;height:700px"></div>
+    </section>
     <script src="js/main.js"></script>
-    <script src="js/ga.js"></script>
     <template id="note-content">
       <section class="note">
         <div class="note-info"><span class="create-date">
