@@ -4579,7 +4579,7 @@ const coordinate_calc_1 = require('./coordinate-calc');
                         let notesList = details.querySelectorAll('osm > note');
                         if (notesList.length) {
                             let bounds = L.latLngBounds({ lat: edge.s, lng: edge.w }, { lat: edge.n, lng: edge.e });
-                            let areaRect = L.rectangle(bounds, { color: '#ff7800', weight: 1 });
+                            let areaRect = L.rectangle(bounds, { color: '#ff1100', weight: 1 });
                             searchArea.addLayer(areaRect).addTo(map);
                             map.fitBounds(bounds);
                             resolve(notesList);
