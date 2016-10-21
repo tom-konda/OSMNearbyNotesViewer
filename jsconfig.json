@@ -1,8 +1,9 @@
 {
-	"compilerOptions": {
-        "target": "ES6",
-        "outDir": "built",
-        "rootDir": ".",
-        "sourceMap": false
-    }
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs"
+    },
+    "files": [
+        "webpack.config.js"
+    ]
 }
