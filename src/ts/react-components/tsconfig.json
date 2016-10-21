@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "module": "es2015",
+        "moduleResolution": "node",
+        "target": "es2015",
+        "lib": [
+            "es2016",
+            "dom"
+        ],
+        "types": [
+            "react",
+            "react-dom"
+        ],
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitAny": false,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false,
+        "noImplicitUseStrict": false,
+        "noEmitOnError": true,
+        "allowSyntheticDefaultImports": true,
+        "sourceMap": false,
+        "jsx": "react",
+        "outDir": "../../../temp/react-components"
+    }
+}
