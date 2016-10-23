@@ -1,23 +1,21 @@
 {
-    "compilerOptions": {
-        "target": "es6",
-        "module": "commonjs",
-        "lib": [
-            "dom",
-            "es5"
-        ],
-        "types": [
-            "node",
-            "es6-promise",
-            "sweetalert",
-            "leaflet"
-        ],
-        "noImplicitAny": false,
-        "outDir": "./../../../temp/browser",
-        "rootDir": ".",
-        "sourceMap": false
-    },
-    "exclude": [
-        "main.ts"
-    ]
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": [
+      "dom",
+      "es5"
+    ],
+    "types": [
+      "node",
+      "es6-promise",
+      "sweetalert",
+      "leaflet"
+    ],
+    "noImplicitAny": false,
+    "outDir": "./../../../temp/browser",
+    "rootDir": ".",
+    "sourceMap": false
+  },
+  "exclude": []
 }

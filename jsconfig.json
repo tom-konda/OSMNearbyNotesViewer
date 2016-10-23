@@ -4,6 +4,6 @@
         "module": "commonjs"
     },
     "files": [
-        "webpack.config.js"
+        "rollup.config.js"
     ]
 }
