@@ -53,6 +53,28 @@ import { coordinateCalc } from './coordinate-calc';
   const auth: osmAuthInstance = OSMOAuthConfig.OAuth;
 
   window.addEventListener(
+    'oauthButtonClicked',
+    (event) => {
+      auth.authenticate(
+        (err, oauth) => {
+          if (err === null) {
+            const oauthReadyEvent = new CustomEvent(
+              'oauthReady',
+              {
+                detail: OSMOAuthConfig
+              }
+            )
+            reactRootWrapperElement.dispatchEvent(oauthReadyEvent)
+          }
+          else {
+            console.error(err)
+          }
+        }
+      );
+    }
+  )
+
+  window.addEventListener(
     'getNearbyNotesClicked',
     (event: CustomEvent) => {
       let receiveData = {
