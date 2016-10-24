@@ -7,16 +7,32 @@ export default class AppComponent extends React.Component<AppDefaultComponentPro
     this.state = {
       isOAuthReady: false,
       OSMOAuth: null,
+      isAuthenticated: false,
+      isQuarifiedBrowser: true,
     }
   }
   componentDidMount() {
     const reactRootWrapperElement = document.querySelector('#AppWrapper');
     reactRootWrapperElement.addEventListener(
-      'oauthReady',
+      'notQualifiedBrowser',
       (event: CustomEvent) => {
         this.setState({
+          isOAuthReady: false,
+          OSMOAuth: null,
+          isAuthenticated: false,
+          isQuarifiedBrowser: false,
+        });
+      }
+    );
+    reactRootWrapperElement.addEventListener(
+      'oauthReady',
+      (event: CustomEvent) => {
+        const auth: osmAuthInstance = event.detail;
+        this.setState({
           isOAuthReady: true,
-          OSMOAuth: event.detail,
+          OSMOAuth: auth,
+          isAuthenticated: auth.authenticated(),
+          isQuarifiedBrowser: this.state.isQuarifiedBrowser,
         });
       }
     );
@@ -26,6 +42,8 @@ export default class AppComponent extends React.Component<AppDefaultComponentPro
         this.setState({
           isOAuthReady: false,
           OSMOAuth: null,
+          isAuthenticated: false,
+          isQuarifiedBrowser: this.state.isQuarifiedBrowser,
         });
       }
     );
@@ -36,6 +54,13 @@ export default class AppComponent extends React.Component<AppDefaultComponentPro
   }
   render() {
     const mainComponent = (isAuthenticated: boolean) => {
+      if (this.state.isQuarifiedBrowser === false) {
+        return (
+          <section className="main">
+            <p>ご使用のブラウザは必須環境を満たしていないため、動作対象外となります。</p>
+          </section>
+        )
+      }
       if (isAuthenticated) {
         return (
           <OSMLoggedInComponent oauth={this.state.OSMOAuth} />
@@ -51,7 +76,7 @@ export default class AppComponent extends React.Component<AppDefaultComponentPro
     }
     return (
       <section id="AppComponent">
-        {mainComponent(this.state.OSMOAuth && this.state.OSMOAuth.authenticated())}
+        {mainComponent(this.state.isAuthenticated)}
       </section>
     )
   }

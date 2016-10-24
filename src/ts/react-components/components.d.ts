@@ -2,27 +2,29 @@ interface AppDefaultComponentProps {
 }
 
 interface AppComponentState {
-    isOAuthReady: boolean,
-    OSMOAuth: osmAuthInstance,
+  isOAuthReady: boolean,
+  OSMOAuth: osmAuthInstance,
+  isAuthenticated: boolean,
+  isQuarifiedBrowser: boolean,
 }
 
 interface OSMLoggedInComponentProps {
-    oauth: osmAuthInstance
+  oauth: osmAuthInstance
 }
 
 interface OSMLoggedInComponentState {
-    notes: any[],
-    noteComments: any[],
-    coordinate: {
-        lat: string,
-        lon: string,
-    }
+  notes: any[],
+  noteComments: any[],
+  coordinate: {
+    lat: string,
+    lon: string,
+  }
 }
 
 interface MapComponentProps {
-    centerCoordinate: {
-        lat: string,
-        lon: string,
-    }
-    notes: any[]
+  centerCoordinate: {
+    lat: string,
+    lon: string,
+  }
+  notes: any[]
 }
