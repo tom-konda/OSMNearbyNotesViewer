@@ -5,7 +5,7 @@
   "scripts": {
     "browser-sync": "browser-sync start --server --files 'build/**/*' --directory",
     "prebuild": "npm-run-all clean tslint:*",
-    "build": "npm-run-all pug:build --parallel ts:build-* scss:build-* --serial mkdir-builddir rollup-react --parallel browserify-*",
+    "build": "npm-run-all pug:build --parallel ts:build-* scss:build-* --serial mkdir-builddir rollup:build-* --parallel browserify-*",
     "clean": "node -e \"require('shelljs').rm('-R', ['temp', 'build']);\"",
     "tslint:browser": "tslint ./src/ts/browser/**.ts",
     "scss:build-pc": "node-sass src/scss/style.scss -o build/css --output-style expanded",
@@ -13,10 +13,17 @@
     "mkdir-builddir": "node -e \"require('shelljs').mkdir('build/js');\"",
     "browserify-browser": "browserify --entry temp/browser/main.js -o ./build/js/main.js",
     "browserify-react": "browserify --entry temp/react-components/react-app.js -o build/js/react-app.js",
-    "rollup-react": "rollup -c",
+    "rollup:build-react": "rollup -c",
     "ts:build-browser": "tsc -p ./src/ts/browser",
     "ts:build-renderer-react-components": "tsc -p ./src/ts/react-components",
-    "webpack:build-renderer": "webpack --progress --colors --config ./webpack.config.js",
+    "watch-all": "npm-run-all --parallel pug:watch-* ts:watch-* scss:watch-* watchify-*",
+    "pug:watch-html": "pug -w -P src/pug --out build",
+    "scss:watch-common": "node-sass --source-map true --source-map-embed true -w -r --output-style expanded -o ./build/css ./src/scss",
+    "ts:watch-browser": "tsc --inlineSourceMap -w -p ./src/ts/browser",
+    "ts:watch-react-components": "tsc --inlineSourceMap -w -p ./src/ts/react-components",
+    "rollup:watch-react": "rollup -m inline -w -c",
+    "watchify-browser": "watchify -d --entry temp/browser/main.js -o ./build/js/main.js",
+    "watchify-react": "watchify -d --entry temp/react-components/react-app.js -o build/js/react-app.js",
     "test": "mocha --require ./src/test/espower-typescript-loader src/test/**.ts"
   },
   "keywords": [
@@ -27,13 +34,13 @@
   "license": "MIT",
   "dependencies": {
     "es6-promise": "^3.3.1",
-    "leaflet": "^0.7.7",
+    "leaflet": "^1.0.1",
     "leaflet.icon.glyph": "^0.2.0",
     "osm-auth": "^0.2.9",
     "pug": "^2.0.0-beta6",
     "react": "^15.3.2",
     "react-dom": "^15.3.2",
-    "react-leaflet": "^0.12.3"
+    "react-leaflet": "^1.0.0-rc.2"
   },
   "devDependencies": {
     "@types/es6-promise": "0.0.32",
@@ -55,14 +62,14 @@
     "power-assert": "^1.4.1",
     "pug-cli": "^1.0.0-alpha6",
     "rollup": "^0.36.3",
-    "rollup-plugin-babel": "^2.6.1",
     "rollup-plugin-buble": "^0.14.0",
-    "rollup-plugin-node-resolve": "^2.0.0",
     "shelljs": "^0.7.4",
     "tslint": "^3.15.1",
     "tslint-eslint-rules": "^2.1.0",
+    "tslint-react": "^1.1.0",
     "typedoc": "^0.5.0",
     "typescript": "^2.0.3",
+    "watchify": "^3.7.0",
     "xml2js": "^0.4.16"
   },
   "engines": {
