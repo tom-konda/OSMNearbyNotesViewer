@@ -26,6 +26,16 @@
     "watchify-react": "watchify -d --entry temp/react-components/react-app.js -o build/js/react-app.js",
     "test": "mocha --require ./src/test/espower-typescript-loader src/test/**.ts"
   },
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browserify-shim": {
+    "react": "global:React",
+    "react-dom": "global:ReactDOM",
+    "react-leaflet": "global:ReactLeaflet"
+  },
   "keywords": [
     "OpenStreetMap",
     "OSM"
@@ -36,11 +46,7 @@
     "es6-promise": "^3.3.1",
     "leaflet": "^1.0.1",
     "leaflet.icon.glyph": "^0.2.0",
-    "osm-auth": "^0.2.9",
-    "pug": "^2.0.0-beta6",
-    "react": "^15.3.2",
-    "react-dom": "^15.3.2",
-    "react-leaflet": "^1.0.0-rc.2"
+    "osm-auth": "^0.2.9"
   },
   "devDependencies": {
     "@types/es6-promise": "0.0.32",
@@ -54,12 +60,14 @@
     "@types/sweetalert": "^1.1.27",
     "@types/xml2js": "0.0.28",
     "browserify": "^13.1.0",
-    "espower-typescript": "^5.0.1",
+    "browserify-shim": "^3.8.12",
+    "espower-typescript": "^6.0.1",
     "mocha": "^3.1.2",
     "node-sass": "^3.10.1",
     "npm-run-all": "^3.1.1",
     "oauth": "^0.9.14",
     "power-assert": "^1.4.1",
+    "pug": "^2.0.0-beta6",
     "pug-cli": "^1.0.0-alpha6",
     "rollup": "^0.36.3",
     "rollup-plugin-buble": "^0.14.0",
@@ -68,7 +76,7 @@
     "tslint-eslint-rules": "^2.1.0",
     "tslint-react": "^1.1.0",
     "typedoc": "^0.5.0",
-    "typescript": "^2.0.3",
+    "typescript": "^2.0.6",
     "watchify": "^3.7.0",
     "xml2js": "^0.4.16"
   },
