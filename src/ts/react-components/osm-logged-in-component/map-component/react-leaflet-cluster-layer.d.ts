@@ -1,5 +1,5 @@
-declare module "react-leaflet" {
-  const react_leaflet: {
+declare module "react-leaflet-cluster-layer" {
+  const react_leaflet_cluster_layer: {
     PropTypes: any,
     AttributionControl: any,
     BaseTileLayer: any,
@@ -29,5 +29,5 @@ declare module "react-leaflet" {
     ZoomControl: any,
   }
 
-  export = react_leaflet
+  export = react_leaflet_cluster_layer
 }

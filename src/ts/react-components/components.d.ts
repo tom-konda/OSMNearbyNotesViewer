@@ -22,9 +22,23 @@ interface OSMLoggedInComponentState {
 }
 
 interface MapComponentProps {
-  centerCoordinate: {
+  centerCoordinate?: {
     lat: string,
     lon: string,
   }
-  notes: any[]
+  notes?: any[]
+}
+
+interface NoteListComponentProps {
+  notes: any[],
+  noteComments: any[],
+}
+
+interface NoteComponentProps {
+  note: any,
+  noteComments: any[],
+}
+
+interface CommentComponentProps {
+  noteComment: any,
 }
