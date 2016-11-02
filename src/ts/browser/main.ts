@@ -2,6 +2,7 @@
 const OSMOAuthConfig = require('./osmOAuthInit');
 import { IDBService } from './indexeddb-class';
 import { coordinateCalc } from './coordinate-calc';
+import codePointAt = require('code-point-at')
 // require('leaflet.icon.glyph');
 
 if (IDBService.enableIndexedDB() === false) {
@@ -260,7 +261,6 @@ else {
             const noteId = event.detail.noteId;
             const target = event.detail.target;
 
-
             const postCommentAndMemoState = (target: Element, noteId: string) => {
               return new Promise(
                 (resolve, reject) => {
@@ -290,7 +290,7 @@ else {
 
                   const select = (target.querySelector(`#note-${noteId}-changeNoteStatus`) as HTMLSelectElement);
                   const textarea = (document.querySelector(`#note-${noteId}-addNoteComment`) as HTMLTextAreaElement);
-                  const fixedEncodeURIComponent = (str: string) => encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + c.codePointAt(0).toString(16));
+                  const fixedEncodeURIComponent = (str: string) => encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + codePointAt(c, 0).toString(16));
                   let params: osmAuthXHROptions;
                   if (select.value) {
                     switch (select.value) {

@@ -43,6 +43,7 @@
   "author": "tom-konda",
   "license": "MIT",
   "dependencies": {
+    "code-point-at": "^1.0.1",
     "es6-promise": "^3.3.1",
     "leaflet": "^1.0.1",
     "leaflet.icon.glyph": "^0.2.0",

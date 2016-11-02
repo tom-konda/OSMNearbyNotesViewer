@@ -11,8 +11,8 @@ declare var msIDBTransaction: IDBTransaction;
 declare var webkitIDBCursor: IDBCursor;
 
 interface Window {
-  mozIndexedDB ?: IDBFactory
-  webkitIndexedDB ?: IDBFactory
+  mozIndexedDB?: IDBFactory
+  webkitIndexedDB?: IDBFactory
   IDBKeyRange: IDBKeyRange
   webkitIDBKeyRange?: IDBKeyRange
   mozIDBKeyRange?: IDBKeyRange
@@ -26,5 +26,13 @@ interface Window {
 }
 
 interface HTMLTimeElement extends HTMLElement {
-  dateTime : String,
+  dateTime: String,
+}
+
+declare module 'code-point-at' {
+  interface charPointAtFunc {
+    (str: string, pos: number): number,
+  }
+  const charPointAt: charPointAtFunc
+  export = charPointAt
 }
