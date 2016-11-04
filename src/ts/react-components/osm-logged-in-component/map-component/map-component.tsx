@@ -24,7 +24,7 @@ export default class MapComponent extends React.Component<MapComponentProps, voi
               attribution='&copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
               url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"
               />
-            <Rectangle bounds={areaBound} color="#ff7800" />
+            <Rectangle bounds={areaBound} color="#ff1100" />
             {markers}
           </Map>
         )

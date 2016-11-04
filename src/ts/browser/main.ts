@@ -100,9 +100,7 @@ else {
           'getNearbyNotesClicked',
           (event: CustomEvent) => {
             let receiveData = {
-              coordinate: {},
-              notes: [],
-              noteComments: [],
+              coordinate: {}
             }
 
             const getUserHomeLocation = () => {
@@ -197,13 +195,12 @@ else {
 
                   commentResult.addEventListener(
                     'error',
-                    (event) => console.warn(event)
+                    (event) => Promise.reject(event.error)
                   )
                   if (commentDate > lastModified) {
                     lastModified = commentDate;
                   }
                 }
-                receiveData.noteComments[noteId] = noteComments;
 
                 let latlng = {
                   lat: notesXML[i].getAttribute('lat'),
@@ -220,38 +217,39 @@ else {
                   'status': status,
                 };
                 let notesResult = notesOS.put(noteData);
-                receiveData.notes[noteId] = noteData;
 
                 notesResult.addEventListener(
                   'success',
-                  (event) => { }
+                  (event) => {
+                    if (i === notesXML.length - 1) {
+                      const receiveDataEvent = new CustomEvent(
+                        'receiveCoordinate',
+                        {
+                          detail: receiveData
+                        }
+                      )
+                      reactRootWrapperElement.dispatchEvent(receiveDataEvent);
+                      Promise.resolve();
+                    }
+                  }
                 )
 
                 notesResult.addEventListener(
                   'error',
-                  (event) => console.error(event.error)
+                  (event) => Promise.reject(event.error)
                 )
               }
-              Promise.resolve();
             }
 
             getUserHomeLocation().then(
-              getNotes,
-              (error) => console.error(error)
+              getNotes
             ).then(
-              setNotesList,
-              (error) => console.error(error)
+              setNotesList
               ).then(
-              () => {
-                const receiveDataEvent = new CustomEvent(
-                  'receiveNotesAndCoordinate',
-                  {
-                    detail: receiveData
-                  }
-                )
-                reactRootWrapperElement.dispatchEvent(receiveDataEvent);
-              }
-              );
+              () => findNotes(null)
+              ).catch((error) => {
+                console.error(error);
+              });
           }
         );
 
@@ -329,24 +327,23 @@ else {
               );
             }
 
-            let updateNoteCommentsList = (xhrResult) => {
+            const updateNoteCommentsList = (xhrResult) => {
               return new Promise(
                 (resolve, reject) => {
-                  let noteId = xhrResult.noteId;
-                  let trans = idbService.getTransaction();
-                  let notesOS = trans.objectStore('notes');
-                  let commentsOS = trans.objectStore('comments');
+                  const trans = idbService.getTransaction();
+                  const notesOS = trans.objectStore('notes');
+                  const commentsOS = trans.objectStore('comments');
                   let isOpened = true;
                   let lastModified = new Date(0);
 
                   let lastCommentsCount = 0;
                   let storedCommentsCount = 0;
 
-                  let response = <XMLDocument>xhrResult.response;
-                  let commentsIdx = commentsOS.index('noteIdIdx');
+                  const response = <XMLDocument>xhrResult.response;
+                  const commentsIdx = commentsOS.index('noteIdIdx');
 
-                  let noteKeyRange = IDBKeyRange.only(noteId);
-                  let noteCommentsRequest = commentsIdx.count(noteKeyRange);
+                  const noteKeyRange = IDBKeyRange.only(noteId);
+                  const noteCommentsRequest = commentsIdx.count(noteKeyRange);
 
                   noteCommentsRequest.onsuccess = (
                     () => {
@@ -383,7 +380,7 @@ else {
                         commentResult.addEventListener(
                           'error',
                           (event) => {
-                            console.warn(event);
+                            console.error(event);
                             return reject(event);
                           }
                         )
@@ -397,10 +394,7 @@ else {
                   );
 
                   noteCommentsRequest.onerror = (
-                    (event) => {
-                      console.warn(event);
-                      return reject(event);
-                    }
+                    (event) => reject(event)
                   );
 
                   if (xhrResult.action !== 'commented') {
@@ -453,5 +447,59 @@ else {
         )
       }
     )
+
+    const findNotes = (condition) => {
+      let foundNotes = {
+        notes: [],
+        noteComments: [],
+      }
+      const trans = idbService.getTransaction(undefined, 'readonly');
+      const notesOS = trans.objectStore('notes');
+      // Get newest note first
+      const notesIdx = notesOS.index('createdIdx');
+      const notesCursor = notesIdx.openCursor(null, 'prev');
+
+      notesCursor.addEventListener(
+        'success',
+        (event) => {
+          if (notesCursor.result) {
+            const noteCursorVal = (<IDBCursorWithValue>notesCursor.result);
+            const noteId = noteCursorVal.value.id;
+
+            const commentsOS = trans.objectStore('comments');
+            const commentsIdx = commentsOS.index('noteIdIdx');
+
+            const commentRange = IDBKeyRange.only(noteId);
+            const commentCursor = commentsIdx.openCursor(commentRange);
+            commentCursor.addEventListener(
+              'success',
+              (event) => {
+                if (commentCursor.result === null) {
+                  foundNotes.notes.push(noteCursorVal.value);
+                  noteCursorVal.advance(1);
+                }
+                else {
+                  const commentList = foundNotes.noteComments[noteId] || [];
+                  const commCursorVal = (<IDBCursorWithValue>commentCursor.result);
+                  commentList[commCursorVal.value.commentNum] = commCursorVal.value;
+                  foundNotes.noteComments[noteId] = commentList;
+                  commCursorVal.advance(1);
+                }
+              }
+            );
+          }
+          else {
+            const foundNotesEvent = new CustomEvent(
+              'foundNotesAndNoteComments',
+              {
+                detail: foundNotes,
+              }
+            );
+            const reactRootWrapperElement = document.querySelector('#AppWrapper');
+            reactRootWrapperElement.dispatchEvent(foundNotesEvent);
+          }
+        }
+      );
+    }
   })();
 }
