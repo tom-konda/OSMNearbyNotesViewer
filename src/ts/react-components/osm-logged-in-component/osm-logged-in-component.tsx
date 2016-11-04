@@ -23,16 +23,28 @@ export default class OSMLoggedInComponent extends React.Component<OSMLoggedInCom
   componentDidMount() {
     const reactRootWrapperElement = document.querySelector('#AppWrapper');
     reactRootWrapperElement.addEventListener(
-      'receiveNotesAndCoordinate',
+      'receiveCoordinate',
       (event: CustomEvent) => {
         const receivedData = event.detail;
         this.setState({
           coordinate: receivedData.coordinate,
-          notes: receivedData.notes,
-          noteComments: receivedData.noteComments,
+          notes: this.state.notes,
+          noteComments: this.state.noteComments,
         });
       }
     );
+
+    reactRootWrapperElement.addEventListener(
+      'foundNotesAndNoteComments',
+      (event: CustomEvent) => {
+        const foundNotes = event.detail;
+        this.setState({
+          coordinate: this.state.coordinate,
+          notes: foundNotes.notes,
+          noteComments: foundNotes.noteComments,
+        });
+      }
+    )
   }
   render() {
     const getMapComponents = (notes: any[]) => {
