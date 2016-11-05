@@ -9,6 +9,7 @@ export default class OSMLoggedInComponent extends React.Component<OSMLoggedInCom
       notes: [],
       noteComments: [],
       coordinate: { lat: null, lon: null },
+      userName: '',
     }
   }
   private handleGetNearbyNotesClick(event: React.MouseEvent<HTMLInputElement>) {
@@ -25,11 +26,11 @@ export default class OSMLoggedInComponent extends React.Component<OSMLoggedInCom
     reactRootWrapperElement.addEventListener(
       'receiveCoordinate',
       (event: CustomEvent) => {
-        const receivedData = event.detail;
         this.setState({
-          coordinate: receivedData.coordinate,
+          coordinate: event.detail.homeCoordinate,
           notes: this.state.notes,
           noteComments: this.state.noteComments,
+          userName: event.detail.userName,
         });
       }
     );
@@ -42,6 +43,7 @@ export default class OSMLoggedInComponent extends React.Component<OSMLoggedInCom
           coordinate: this.state.coordinate,
           notes: foundNotes.notes,
           noteComments: foundNotes.noteComments,
+          userName: this.state.userName,
         });
       }
     )
@@ -58,7 +60,7 @@ export default class OSMLoggedInComponent extends React.Component<OSMLoggedInCom
     return (
       <section className="main">
         <input type="button" value="地図メモの取得を試みる" onClick={(event) => this.handleGetNearbyNotesClick(event)} />
-        <NoteListComponent notes={this.state.notes} noteComments={this.state.noteComments} />
+        <NoteListComponent notes={this.state.notes} noteComments={this.state.noteComments} userName={this.state.userName} />
         {getMapComponents(this.state.notes)}
       </section>
     )

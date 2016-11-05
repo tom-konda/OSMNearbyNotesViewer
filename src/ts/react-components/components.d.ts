@@ -18,7 +18,8 @@ interface OSMLoggedInComponentState {
   coordinate: {
     lat: string,
     lon: string,
-  }
+  },
+  userName: string,
 }
 
 interface MapComponentProps {
@@ -32,11 +33,18 @@ interface MapComponentProps {
 interface NoteListComponentProps {
   notes: any[],
   noteComments: any[],
+  userName: string,
 }
 
 interface NoteComponentProps {
   note: any,
   noteComments: any[],
+  userName: string,
+}
+
+interface NoteComponentState {
+  currentNote: any,
+  currentNoteComments: any[]
 }
 
 interface CommentComponentProps {

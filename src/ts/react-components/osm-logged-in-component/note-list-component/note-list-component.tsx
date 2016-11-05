@@ -8,7 +8,7 @@ export default class NoteListComponent extends React.Component<NoteListComponent
   render() {
     let noteList = this.props.notes.map(
       (note, index) => {
-        return <NoteComponent key={note.id} note={note} noteComments={this.props.noteComments[note.id]} />
+        return <NoteComponent key={note.id} note={note} noteComments={this.props.noteComments[note.id]} userName={this.props.userName} />
       }
     );
     return (

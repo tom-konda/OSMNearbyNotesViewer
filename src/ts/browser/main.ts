@@ -99,37 +99,43 @@ else {
         window.addEventListener(
           'getNearbyNotesClicked',
           (event: CustomEvent) => {
-            let receiveData = {
-              coordinate: {}
-            }
-
             const getUserHomeLocation = () => {
               return new Promise(function (resolve, reject) {
                 auth.xhr({
                   method: 'GET',
                   path: '/api/0.6/user/details'
-                }, function (err, details) {
+                }, function (error, details: XMLDocument) {
                   // details is an XML DOM of user details
-                  if (err === null) {
+                  if (error === null) {
                     const homeLocation = details.querySelector('osm > user > home');
+                    const userName = details.querySelector('osm > user').getAttribute('display_name');
                     if (homeLocation !== null) {
                       let coordinate: { lat: string, lon: string } = {
                         lat: homeLocation.getAttribute('lat'),
                         lon: homeLocation.getAttribute('lon'),
                       }
+                      const receiveDataEvent = new CustomEvent(
+                        'receiveCoordinate',
+                        {
+                          detail: {
+                            homeCoordinate: coordinate,
+                            userName: userName
+                          },
+                        }
+                      );
+                      reactRootWrapperElement.dispatchEvent(receiveDataEvent);
                       resolve(coordinate);
                       return;
                     }
                     swal('Cannot get user home location.', 'error');
                     reject('Cannot get user home location.');
                   }
-                  reject(err);
+                  reject(error);
                 });
               });
             };
 
             const getNotes = (coordinate: { lat: string, lon: string }) => {
-              receiveData.coordinate = coordinate;
               return new Promise((resolve, reject) => {
                 const edge = coordinateCalc.getCoordinateArea(coordinate, 10);
                 auth.xhr({
@@ -157,78 +163,29 @@ else {
               const commentsOS = trans.objectStore('comments');
 
               for (let i = 0, notesCnt = notesXML.length; i < notesCnt; ++i) {
-                let noteComments = [];
                 let lastModified = new Date(0);
                 let noteId = notesXML[i].querySelector('id').textContent;
 
                 let commentList = notesXML[i].querySelectorAll('comments > comment');
                 for (let j = 0, commentCnt = commentList.length; j < commentCnt; ++j) {
                   let date = commentList[j].querySelector('date').textContent;
-                  let text = commentList[j].querySelector('text').textContent;
-                  let action = commentList[j].querySelector('action').textContent;
-
-                  let user = '';
-                  let userURL = '';
-                  if (commentList[j].querySelector('user')) {
-                    user = commentList[j].querySelector('user').textContent;
-                    userURL = commentList[j].querySelector('user_url').textContent;
-                  }
-
                   let commentDate = new Date(Date.parse(`${date.split(' ').slice(0, 2).join('T')}+0000`));
-                  let commentData = {
-                    'noteId': +noteId,
-                    'commentNum': j,
-                    'date': commentDate,
-                    'user': user,
-                    'userURL': userURL,
-                    'text': text,
-                    'action': action,
-                  }
-                  let commentResult = commentsOS.put(commentData);
-                  noteComments[j] = commentData;
+                  let commentResult = commentsOS.put(createNoteCommentData(commentList[j], j, Number(noteId)));
 
-                  commentResult.addEventListener(
-                    'success',
-                    (event) => {
-                    }
-                  )
+                  commentResult.addEventListener('success', (event) => { })
 
-                  commentResult.addEventListener(
-                    'error',
-                    (event) => Promise.reject(event.error)
-                  )
+                  commentResult.addEventListener('error', (event) => Promise.reject(event.error))
                   if (commentDate > lastModified) {
                     lastModified = commentDate;
                   }
                 }
 
-                let latlng = {
-                  lat: notesXML[i].getAttribute('lat'),
-                  lng: notesXML[i].getAttribute('lon'),
-                }
-
-                let created = notesXML[i].querySelector('date_created').textContent;
-                let status = notesXML[i].querySelector('status').textContent;
-                let noteData = {
-                  'latlng': latlng,
-                  'id': +noteId,
-                  'created': new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
-                  'modified': new Date(lastModified.getTime()),
-                  'status': status,
-                };
-                let notesResult = notesOS.put(noteData);
+                let notesResult = notesOS.put(createNoteData(notesXML[i], lastModified, Number(noteId)));
 
                 notesResult.addEventListener(
                   'success',
                   (event) => {
                     if (i === notesXML.length - 1) {
-                      const receiveDataEvent = new CustomEvent(
-                        'receiveCoordinate',
-                        {
-                          detail: receiveData
-                        }
-                      )
-                      reactRootWrapperElement.dispatchEvent(receiveDataEvent);
                       Promise.resolve();
                     }
                   }
@@ -258,6 +215,7 @@ else {
           (event: CustomEvent) => {
             const noteId = event.detail.noteId;
             const target = event.detail.target;
+            const noteComponentElement = document.querySelector(`#note-${noteId}`)
 
             const postCommentAndMemoState = (target: Element, noteId: string) => {
               return new Promise(
@@ -336,7 +294,7 @@ else {
                   let isOpened = true;
                   let lastModified = new Date(0);
 
-                  let lastCommentsCount = 0;
+                  let latestCommentsCount = 0;
                   let storedCommentsCount = 0;
 
                   const response = <XMLDocument>xhrResult.response;
@@ -350,40 +308,20 @@ else {
                       storedCommentsCount = noteCommentsRequest.result;
 
                       let lastComments = response.querySelectorAll('comments > comment');
-                      lastCommentsCount = response.querySelectorAll('comments > comment').length;
+                      latestCommentsCount = response.querySelectorAll('comments > comment').length;
 
-                      for (let i = storedCommentsCount; i < lastCommentsCount; ++i) {
+                      for (let i = storedCommentsCount; i < latestCommentsCount; ++i) {
                         let comment = lastComments[i];
                         let commentDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
 
-                        let user = '';
-                        let userURL = '';
-                        if (comment.querySelector('user')) {
-                          user = comment.querySelector('user').textContent;
-                          userURL = comment.querySelector('user_url').textContent;
-                        }
-                        let commentResult = commentsOS.add({
-                          'noteId': +noteId,
-                          'commentNum': i,
-                          'date': commentDate,
-                          'user': user,
-                          'userURL': userURL,
-                          'text': comment.querySelector('text').textContent,
-                          'action': comment.querySelector('action').textContent,
-                        });
+                        let commentResult = commentsOS.add(createNoteCommentData(comment, i, noteId));
 
                         commentResult.addEventListener(
                           'success',
                           (event) => { }
                         )
 
-                        commentResult.addEventListener(
-                          'error',
-                          (event) => {
-                            console.error(event);
-                            return reject(event);
-                          }
-                        )
+                        commentResult.addEventListener('error', (event) => reject(event))
 
                         if (commentDate > lastModified) {
                           lastModified = commentDate;
@@ -403,28 +341,14 @@ else {
                     }
                   }
 
-                  let latlng = {
-                    lat: response.querySelector('note').getAttribute('lat'),
-                    lng: response.querySelector('note').getAttribute('lon'),
-                  }
-
-                  let created = response.querySelector('date_created').textContent;
-                  let status = response.querySelector('status').textContent;
-
-                  let notesResult = notesOS.put({
-                    'latlng': latlng,
-                    'id': +noteId,
-                    'created': new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
-                    'modified': new Date(lastModified.getTime()),
-                    'status': status,
-                  });
+                  let notesResult = notesOS.put(createNoteData(response.querySelector('note'), lastModified, noteId));
 
                   notesResult.addEventListener(
                     'success',
                     (event) => {
                       return resolve({
                         'displayedCommentsCount': storedCommentsCount,
-                        'currentStoredCommentsCount': lastCommentsCount,
+                        'currentStoredCommentsCount': latestCommentsCount,
                         'responseXML': response,
                         'lastModified': lastModified,
                         'noteId': +noteId,
@@ -432,17 +356,24 @@ else {
                       });
                     }
                   );
+
+                  notesResult.addEventListener(
+                    'error',
+                    (event) => reject(event.error)
+                  )
                 }
               );
             }
 
             postCommentAndMemoState(target, noteId).then(
               updateNoteCommentsList,
-              (reject) => console.error(reject)
             ).then(
               () => null,
-              (reject) => console.error(reject)
-              );
+            ).catch((error: Error) => {
+              console.error(error);
+              const submitFailureEvent = new Event('submitFailure');
+              noteComponentElement.dispatchEvent(submitFailureEvent);
+            });
           }
         )
       }
@@ -500,6 +431,44 @@ else {
           }
         }
       );
+    }
+
+    const createNoteData = (noteElement: Element, lastModified: Date, noteId: number) => {
+      const latlng = {
+        lat: noteElement.getAttribute('lat'),
+        lng: noteElement.getAttribute('lon'),
+      }
+
+      const created = noteElement.querySelector('date_created').textContent;
+      const status = noteElement.querySelector('status').textContent;
+
+      return {
+        'latlng': latlng,
+        'id': +noteId,
+        'created': new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
+        'modified': new Date(lastModified.getTime()),
+        'status': status,
+      };
+    }
+
+    const createNoteCommentData = (commentElement: Element, commentNum: number, noteId: number) => {
+      const commentDate = new Date(Date.parse(`${commentElement.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
+
+      let user = '';
+      let userURL = '';
+      if (commentElement.querySelector('user')) {
+        user = commentElement.querySelector('user').textContent;
+        userURL = commentElement.querySelector('user_url').textContent;
+      }
+      return {
+        'noteId': +noteId,
+        'commentNum': commentNum,
+        'date': commentDate,
+        'user': user,
+        'userURL': userURL,
+        'text': commentElement.querySelector('text').textContent,
+        'action': commentElement.querySelector('action').textContent,
+      };
     }
   })();
 }
