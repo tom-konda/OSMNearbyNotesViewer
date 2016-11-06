@@ -57,10 +57,12 @@ export default class OSMLoggedInComponent extends React.Component<OSMLoggedInCom
         return <MapComponent />
       }
     }
+    const osmServer = this.props.oauth.options().url;
+
     return (
       <section className="main">
         <input type="button" value="地図メモの取得を試みる" onClick={(event) => this.handleGetNearbyNotesClick(event)} />
-        <NoteListComponent notes={this.state.notes} noteComments={this.state.noteComments} userName={this.state.userName} />
+        <NoteListComponent notes={this.state.notes} noteComments={this.state.noteComments} userName={this.state.userName} osmServer={osmServer} />
         {getMapComponents(this.state.notes)}
       </section>
     )

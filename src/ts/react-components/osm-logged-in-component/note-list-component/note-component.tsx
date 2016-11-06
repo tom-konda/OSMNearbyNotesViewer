@@ -2,7 +2,7 @@ import React from 'react';
 import CommentComponent from './comment-component';
 
 export default class NoteComponent extends React.Component<NoteComponentProps, NoteComponentState> {
-  private prePostState = null;
+  private prePostState: null | NoteComponentState = null;
   constructor(props: NoteComponentProps) {
     super(props);
     this.state = {
@@ -11,23 +11,32 @@ export default class NoteComponent extends React.Component<NoteComponentProps, N
     }
   }
   componentDidMount() {
-    console.log(this)
     const noteComponentElement = document.querySelector(`#note-${this.props.note.id}`);
     noteComponentElement.addEventListener(
       'submitSuccess',
       (event: CustomEvent) => {
-        // this.setState({
-        // });
+        const modifiedNoteData = event.detail;
+        const currentPostState = this.prePostState;
+        currentPostState.currentNote.modified = modifiedNoteData.lastModified;
+        currentPostState.currentNote.status = modifiedNoteData.noteStatus;
+        Array.prototype.push.apply(currentPostState.currentNoteComments, modifiedNoteData.unloadComments);
+
+        this.setState(currentPostState);
+        this.prePostState = null
       }
     );
     noteComponentElement.addEventListener(
       'submitFailure',
       (event: CustomEvent) => {
-        console.log(this.prePostState, 'Expect revert')
         this.setState(this.prePostState);
         this.prePostState = null
       }
     );
+  }
+  componentWillUnmount() {
+    const noteComponentElement = document.querySelector(`#note-${this.props.note.id}`);
+    noteComponentElement.removeEventListener('submitSuccess');
+    noteComponentElement.removeEventListener('submitFailure');
   }
   private cloneState(state: NoteComponentState): NoteComponentState {
     const cloned = Object.assign({}, state);
@@ -36,8 +45,6 @@ export default class NoteComponent extends React.Component<NoteComponentProps, N
     return cloned;
   }
   private handleSubmit(event: React.FormEvent<any>) {
-    event.preventDefault();
-    console.log(event.target);
     this.prePostState = this.cloneState(this.state);
 
     const target = (event.target as Element);
@@ -53,11 +60,12 @@ export default class NoteComponent extends React.Component<NoteComponentProps, N
       date: commentDate,
       noteId: noteId,
       user: this.props.userName,
-      userURL: `http://www.openstreetmap.org/user/${this.props.userName}`,
+      userURL: `${this.props.osmServer}/user/${this.props.userName}`,
       text: textarea.value
     });
 
     const note = this.state.currentNote;
+    note.modified = commentDate;
     if (commentAction !== 'commented') {
       if (commentAction === 'closed') {
         note.status = 'closed'
@@ -82,6 +90,8 @@ export default class NoteComponent extends React.Component<NoteComponentProps, N
       }
     );
     window.dispatchEvent(submitEvent);
+    event.preventDefault();
+    return false;
   }
   render() {
     const comments = this.state.currentNoteComments.map(

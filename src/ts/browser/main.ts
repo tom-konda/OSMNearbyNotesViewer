@@ -169,7 +169,7 @@ else {
                 let commentList = notesXML[i].querySelectorAll('comments > comment');
                 for (let j = 0, commentCnt = commentList.length; j < commentCnt; ++j) {
                   let date = commentList[j].querySelector('date').textContent;
-                  let commentDate = new Date(Date.parse(`${date.split(' ').slice(0, 2).join('T')}+0000`));
+                  let commentDate = new Date(Date.parse(`${date.split(' ').slice(0, 2).join('T')}+00:00`));
                   let commentResult = commentsOS.put(createNoteCommentData(commentList[j], j, Number(noteId)));
 
                   commentResult.addEventListener('success', (event) => { })
@@ -213,11 +213,12 @@ else {
         window.addEventListener(
           'submitButtonClicked',
           (event: CustomEvent) => {
-            const noteId = event.detail.noteId;
+            event.preventDefault();
+            const noteId: number = +event.detail.noteId;
             const target = event.detail.target;
             const noteComponentElement = document.querySelector(`#note-${noteId}`)
 
-            const postCommentAndMemoState = (target: Element, noteId: string) => {
+            const postCommentAndMemoState = (target: Element, noteId: number) => {
               return new Promise(
                 (resolve, reject) => {
                   const osmXHRPost = (action: string, params) => {
@@ -230,10 +231,10 @@ else {
                         else if (error instanceof XMLHttpRequest) {
                           switch (error.status) {
                             case 409:
-                              swal('409');
+                              swal(error.responseText);
                               break;
                             case 410:
-                              swal('410');
+                              swal(error.responseText);
                           }
                           reject(error.responseText);
                         }
@@ -291,7 +292,7 @@ else {
                   const trans = idbService.getTransaction();
                   const notesOS = trans.objectStore('notes');
                   const commentsOS = trans.objectStore('comments');
-                  let isOpened = true;
+                  const unloadComments = [];
                   let lastModified = new Date(0);
 
                   let latestCommentsCount = 0;
@@ -300,26 +301,25 @@ else {
                   const response = <XMLDocument>xhrResult.response;
                   const commentsIdx = commentsOS.index('noteIdIdx');
 
-                  const noteKeyRange = IDBKeyRange.only(noteId);
+                  const noteKeyRange = IDBKeyRange.only(+noteId);
                   const noteCommentsRequest = commentsIdx.count(noteKeyRange);
 
                   noteCommentsRequest.onsuccess = (
                     () => {
                       storedCommentsCount = noteCommentsRequest.result;
 
-                      let lastComments = response.querySelectorAll('comments > comment');
+                      const lastComments = response.querySelectorAll('comments > comment');
                       latestCommentsCount = response.querySelectorAll('comments > comment').length;
 
                       for (let i = storedCommentsCount; i < latestCommentsCount; ++i) {
                         let comment = lastComments[i];
-                        let commentDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
+                        let commentDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+00:00`));
+                        let commentData = createNoteCommentData(comment, i, noteId);
+                        unloadComments.push(commentData)
 
-                        let commentResult = commentsOS.add(createNoteCommentData(comment, i, noteId));
+                        let commentResult = commentsOS.add(commentData);
 
-                        commentResult.addEventListener(
-                          'success',
-                          (event) => { }
-                        )
+                        commentResult.addEventListener('success', (event) => { })
 
                         commentResult.addEventListener('error', (event) => reject(event))
 
@@ -335,32 +335,21 @@ else {
                     (event) => reject(event)
                   );
 
-                  if (xhrResult.action !== 'commented') {
-                    if (xhrResult.action === 'closed') {
-                      isOpened = false;
-                    }
-                  }
-
-                  let notesResult = notesOS.put(createNoteData(response.querySelector('note'), lastModified, noteId));
+                  const noteData = createNoteData(response.querySelector('note'), lastModified, noteId);
+                  const notesResult = notesOS.put(noteData);
 
                   notesResult.addEventListener(
                     'success',
                     (event) => {
                       return resolve({
-                        'displayedCommentsCount': storedCommentsCount,
-                        'currentStoredCommentsCount': latestCommentsCount,
-                        'responseXML': response,
+                        'unloadComments': unloadComments,
                         'lastModified': lastModified,
-                        'noteId': +noteId,
-                        'isOpened': isOpened,
+                        'noteStatus': noteData.status,
                       });
                     }
                   );
 
-                  notesResult.addEventListener(
-                    'error',
-                    (event) => reject(event.error)
-                  )
+                  notesResult.addEventListener('error', (event) => reject(event.error));
                 }
               );
             }
@@ -368,7 +357,15 @@ else {
             postCommentAndMemoState(target, noteId).then(
               updateNoteCommentsList,
             ).then(
-              () => null,
+              (modifiedNoteData) => {
+                const submitSuccessEvent = new CustomEvent(
+                  'submitSuccess',
+                  {
+                    detail: modifiedNoteData,
+                  }
+                );
+                noteComponentElement.dispatchEvent(submitSuccessEvent);
+              },
             ).catch((error: Error) => {
               console.error(error);
               const submitFailureEvent = new Event('submitFailure');
@@ -445,14 +442,14 @@ else {
       return {
         'latlng': latlng,
         'id': +noteId,
-        'created': new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
+        'created': new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+00:00`)),
         'modified': new Date(lastModified.getTime()),
         'status': status,
       };
     }
 
     const createNoteCommentData = (commentElement: Element, commentNum: number, noteId: number) => {
-      const commentDate = new Date(Date.parse(`${commentElement.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
+      const commentDate = new Date(Date.parse(`${commentElement.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+00:00`));
 
       let user = '';
       let userURL = '';
