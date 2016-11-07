@@ -22,3 +22,12 @@ article.comment > .commentText{
   height: 700px;
   width: 700px;
 }
+
+.comment-list {
+  counter-reset: noteComment;
+}
+
+.comment-list > article::before {
+  counter-increment: noteComment;
+  content: counter(noteComment);
+}
