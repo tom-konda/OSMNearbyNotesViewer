@@ -5,7 +5,7 @@
   "scripts": {
     "browser-sync": "browser-sync start --server --files 'build/**/*' --directory",
     "prebuild": "npm-run-all clean tslint:*",
-    "build": "npm-run-all pug:build --parallel ts:build-* scss:build-* --serial mkdir-builddir --parallel rollup:build-* browserify-*",
+    "build": "npm-run-all pug:build --parallel ts:build-* scss:build-* --serial mkdir-builddir rollup:build-* browserify-*",
     "clean": "node -e \"require('shelljs').rm('-R', ['temp', 'build']);\"",
     "tslint:browser": "tslint ./src/ts/browser/**.ts",
     "scss:build-pc": "node-sass src/scss/style.scss -o build/css --output-style expanded",
