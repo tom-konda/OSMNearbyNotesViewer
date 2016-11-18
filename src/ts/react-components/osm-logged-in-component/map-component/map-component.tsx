@@ -19,7 +19,7 @@ export default class MapComponent extends React.Component<MapComponentProps, voi
         const edge = coordinateCalc.getCoordinateArea(this.props.centerCoordinate, 10);
         const areaBound = [[edge.s, edge.w], [edge.n, edge.e]];
         return (
-          <Map center={[Number(centerCoordinate.lat), Number(centerCoordinate.lon)]} bounds={areaBound} boundsOptions={{ padding: [0, 0] }}>
+          <Map id="leaflet-container" center={[Number(centerCoordinate.lat), Number(centerCoordinate.lon)]} bounds={areaBound} boundsOptions={{ padding: [0, 0] }}>
             <TileLayer
               attribution='&copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
               url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"

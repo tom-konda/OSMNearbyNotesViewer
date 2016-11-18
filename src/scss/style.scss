@@ -14,11 +14,11 @@ article.comment > .commentText{
   flex: 1;
 }
 
-#container {
+#note-map-container {
   display: flex;
 }
 
-.leaflet-container {
+#leaflet-container {
   height: 700px;
   width: 700px;
 }
