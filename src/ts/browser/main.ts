@@ -1,11 +1,10 @@
 'use strict';
 const OSMOAuthConfig = require('./osmOAuthInit');
-import { IDBService } from './indexeddb-class';
 import { coordinateCalc } from './coordinate-calc';
-import codePointAt = require('code-point-at')
-// require('leaflet.icon.glyph');
+import { OSMNearbyNotesDatabase } from './dexie-db';
+import codePointAt = require('code-point-at');
 
-if (IDBService.enableIndexedDB() === false) {
+if (typeof indexedDB === 'undefined') {
   document.addEventListener(
     'DOMContentLoaded',
     () => {
@@ -17,50 +16,7 @@ if (IDBService.enableIndexedDB() === false) {
 }
 else {
   (function () {
-
-    let idbService = IDBService;
-
-    let idbReq = idbService.openDB('osmNearNotes', 1);
-
-    idbReq.addEventListener(
-      'upgradeneeded',
-      function (event) {
-        let oldVersion = event.oldVersion;
-        if (oldVersion < 1) {
-          // Create new indexedDB
-          let notesStore = idbService.createObjectStore('notes', 'id', false);
-          notesStore.createIndex(
-            'createdIdx',
-            'created',
-            {
-              'unique': false,
-              'multiEntry': false,
-            }
-          );
-
-          notesStore.createIndex(
-            'modifiedIdx',
-            'modified',
-            {
-              'unique': false,
-              'multiEntry': false,
-            }
-          );
-
-          let commentsStore = idbService.createObjectStore('comments', ['noteId', 'commentNum'], false);
-          commentsStore.createIndex(
-            'noteIdIdx',
-            'noteId',
-            {
-              'unique': false,
-              'multiEntry': false,
-            }
-          );
-        }
-      },
-      false
-    );
-
+    const db = new OSMNearbyNotesDatabase();
     document.addEventListener(
       'DOMContentLoaded',
       () => {
@@ -78,9 +34,9 @@ else {
           'oauthButtonClicked',
           (event) => {
             auth.authenticate(
-              (err, oauth) => {
-                if (err) {
-                  console.error(err)
+              (error, oauth) => {
+                if (error) {
+                  console.error(error)
                 }
                 else {
                   const oauthReadyEvent = new CustomEvent(
@@ -104,7 +60,7 @@ else {
                 auth.xhr({
                   method: 'GET',
                   path: '/api/0.6/user/details'
-                }, function (error, details: XMLDocument) {
+                }, function (error: any, details: XMLDocument) {
                   // details is an XML DOM of user details
                   if (error === null) {
                     const homeLocation = details.querySelector('osm > user > home');
@@ -141,8 +97,8 @@ else {
                 auth.xhr({
                   method: 'GET',
                   path: `/api/0.6/notes?limit=1000&bbox=${edge.w},${edge.s},${edge.e},${edge.n}`
-                }, function (err, details: XMLDocument) {
-                  if (err === null) {
+                }, function (error: any, details: XMLDocument) {
+                  if (error === null) {
                     const notesList = details.querySelectorAll('osm > note');
 
                     if (notesList.length) {
@@ -152,50 +108,31 @@ else {
                     swal('Cannot get comments around near your home location.', 'error');
                     reject('Cannot get comments around near your home location.');
                   }
-                  reject(err);
+                  reject(error);
                 });
               });
             };
 
             const setNotesList = (notesXML: NodeListOf<Element>) => {
-              const trans = idbService.getTransaction();
-              const notesOS = trans.objectStore('notes');
-              const commentsOS = trans.objectStore('comments');
-
+              const noteData: NoteFormat[] = [];
               for (let i = 0, notesCnt = notesXML.length; i < notesCnt; ++i) {
                 let lastModified = new Date(0);
                 let noteId = notesXML[i].querySelector('id').textContent;
 
                 let commentList = notesXML[i].querySelectorAll('comments > comment');
+                const noteCommentsData: NoteCommentFormat[] = [];
                 for (let j = 0, commentCnt = commentList.length; j < commentCnt; ++j) {
                   let date = commentList[j].querySelector('date').textContent;
                   let commentDate = new Date(Date.parse(`${date.split(' ').slice(0, 2).join('T')}+00:00`));
-                  let commentResult = commentsOS.put(createNoteCommentData(commentList[j], j, Number(noteId)));
-
-                  commentResult.addEventListener('success', (event) => { })
-
-                  commentResult.addEventListener('error', (event) => Promise.reject(event.error))
+                  noteCommentsData.push(createNoteCommentData(commentList[j], j, Number(noteId)));
                   if (commentDate > lastModified) {
                     lastModified = commentDate;
                   }
                 }
-
-                let notesResult = notesOS.put(createNoteData(notesXML[i], lastModified, Number(noteId)));
-
-                notesResult.addEventListener(
-                  'success',
-                  (event) => {
-                    if (i === notesXML.length - 1) {
-                      Promise.resolve();
-                    }
-                  }
-                )
-
-                notesResult.addEventListener(
-                  'error',
-                  (event) => Promise.reject(event.error)
-                )
+                db.comments.bulkPut(noteCommentsData).catch((error) => Promise.reject(error));
+                noteData.push(createNoteData(notesXML[i], lastModified, Number(noteId)));
               }
+              return db.notes.bulkPut(noteData);
             }
 
             getUserHomeLocation().then(
@@ -205,7 +142,13 @@ else {
               ).then(
               () => findNotes(null)
               ).catch((error) => {
-                console.error(error);
+                if (error instanceof XMLHttpRequest) {
+                  swal(error.statusText, error.responseText, 'error');
+                  console.error(error);
+                }
+                else {
+                  console.error(error);
+                }
               });
           }
         );
@@ -221,7 +164,7 @@ else {
             const postCommentAndMemoState = (target: Element, noteId: number) => {
               return new Promise(
                 (resolve, reject) => {
-                  const osmXHRPost = (action: string, params) => {
+                  const osmXHRPost = (action: string, params: any) => {
                     auth.xhr(
                       params,
                       (error, xhr) => {
@@ -231,10 +174,10 @@ else {
                         else if (error instanceof XMLHttpRequest) {
                           switch (error.status) {
                             case 409:
-                              swal(error.responseText);
+                              swal(error.statusText, error.responseText, 'error');
                               break;
                             case 410:
-                              swal(error.responseText);
+                              swal(error.statusText, error.responseText, 'error');
                           }
                           reject(error.responseText);
                         }
@@ -286,70 +229,54 @@ else {
               );
             }
 
-            const updateNoteCommentsList = (xhrResult) => {
+            const updateNoteCommentsList = (xhrResult: any) => {
               return new Promise(
                 (resolve, reject) => {
-                  const trans = idbService.getTransaction();
-                  const notesOS = trans.objectStore('notes');
-                  const commentsOS = trans.objectStore('comments');
-                  const unloadComments = [];
+                  const unloadComments: NoteCommentFormat[] = [];
+                  let noteData: NoteFormat;
                   let lastModified = new Date(0);
 
                   let latestCommentsCount = 0;
                   let storedCommentsCount = 0;
 
                   const response = <XMLDocument>xhrResult.response;
-                  const commentsIdx = commentsOS.index('noteIdIdx');
+                  db.comments.count().then(
+                    (rowCount) => {
+                      storedCommentsCount = rowCount;
 
-                  const noteKeyRange = IDBKeyRange.only(+noteId);
-                  const noteCommentsRequest = commentsIdx.count(noteKeyRange);
-
-                  noteCommentsRequest.onsuccess = (
-                    () => {
-                      storedCommentsCount = noteCommentsRequest.result;
-
-                      const lastComments = response.querySelectorAll('comments > comment');
+                      const latestComments = response.querySelectorAll('comments > comment');
                       latestCommentsCount = response.querySelectorAll('comments > comment').length;
 
                       for (let i = storedCommentsCount; i < latestCommentsCount; ++i) {
-                        let comment = lastComments[i];
+                        let comment = latestComments[i];
                         let commentDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+00:00`));
                         let commentData = createNoteCommentData(comment, i, noteId);
                         unloadComments.push(commentData)
-
-                        let commentResult = commentsOS.add(commentData);
-
-                        commentResult.addEventListener('success', (event) => { })
-
-                        commentResult.addEventListener('error', (event) => reject(event))
 
                         if (commentDate > lastModified) {
                           lastModified = commentDate;
                         }
                       }
-
+                      return db.comments.bulkAdd(unloadComments);
                     }
-                  );
-
-                  noteCommentsRequest.onerror = (
-                    (event) => reject(event)
-                  );
-
-                  const noteData = createNoteData(response.querySelector('note'), lastModified, noteId);
-                  const notesResult = notesOS.put(noteData);
-
-                  notesResult.addEventListener(
-                    'success',
-                    (event) => {
+                  ).then(
+                    (comment) => {
+                      noteData = createNoteData(response.querySelector('note'), lastModified, noteId);
+                      return db.notes.put(noteData);
+                    }
+                    ).then(
+                    () => {
                       return resolve({
                         'unloadComments': unloadComments,
                         'lastModified': lastModified,
                         'noteStatus': noteData.status,
                       });
                     }
-                  );
-
-                  notesResult.addEventListener('error', (event) => reject(event.error));
+                    ).catch(
+                    (error) => {
+                      reject(error);
+                    }
+                    );
                 }
               );
             }
@@ -376,62 +303,62 @@ else {
       }
     )
 
-    const findNotes = (condition) => {
-      let foundNotes = {
+    const findNotes = (condition: any) => {
+      let foundNotes: {
+        notes: NoteFormat[],
+        noteComments: { [key: number]: NoteCommentFormat[] },
+      }
+      foundNotes = {
         notes: [],
         noteComments: [],
       }
-      const trans = idbService.getTransaction(undefined, 'readonly');
-      const notesOS = trans.objectStore('notes');
-      // Get newest note first
-      const notesIdx = notesOS.index('createdIdx');
-      const notesCursor = notesIdx.openCursor(null, 'prev');
 
-      notesCursor.addEventListener(
-        'success',
-        (event) => {
-          if (notesCursor.result) {
-            const noteCursorVal = (<IDBCursorWithValue>notesCursor.result);
-            const noteId = noteCursorVal.value.id;
-
-            const commentsOS = trans.objectStore('comments');
-            const commentsIdx = commentsOS.index('noteIdIdx');
-
-            const commentRange = IDBKeyRange.only(noteId);
-            const commentCursor = commentsIdx.openCursor(commentRange);
-            commentCursor.addEventListener(
-              'success',
-              (event) => {
-                if (commentCursor.result === null) {
-                  foundNotes.notes.push(noteCursorVal.value);
-                  noteCursorVal.advance(1);
-                }
-                else {
-                  const commentList = foundNotes.noteComments[noteId] || [];
-                  const commCursorVal = (<IDBCursorWithValue>commentCursor.result);
-                  commentList[commCursorVal.value.commentNum] = commCursorVal.value;
-                  foundNotes.noteComments[noteId] = commentList;
-                  commCursorVal.advance(1);
-                }
-              }
-            );
-          }
-          else {
-            const foundNotesEvent = new CustomEvent(
-              'foundNotesAndNoteComments',
-              {
-                detail: foundNotes,
-              }
-            );
-            const reactRootWrapperElement = document.querySelector('#AppWrapper');
-            reactRootWrapperElement.dispatchEvent(foundNotesEvent);
-          }
+      db.notes.toArray().then(
+        (notes) => {
+          const noteIds: number[] = [];
+          notes.forEach(
+            (note) => {
+              foundNotes.notes.push(note);
+              noteIds.push(note.id);
+            }
+          )
+          return Promise.resolve(noteIds);
         }
-      );
+      ).then(
+        (noteIds) => {
+          return Promise.all(
+            noteIds.map(
+              (noteId) => {
+                return db.comments.where('noteId').equals(noteId).toArray().then(
+                  (comments) => {
+                    comments.forEach(
+                      (comment) => {
+                        const noteId = comment.noteId;
+                        foundNotes.noteComments[noteId] = comments;
+                      }
+                    )
+                  }
+                );
+              }
+            )
+          )
+        }
+        ).then(
+        () => {
+          const foundNotesEvent = new CustomEvent(
+            'foundNotesAndNoteComments',
+            {
+              detail: foundNotes,
+            }
+          );
+          const reactRootWrapperElement = document.querySelector('#AppWrapper');
+          reactRootWrapperElement.dispatchEvent(foundNotesEvent);
+        }
+        )
     }
 
-    const createNoteData = (noteElement: Element, lastModified: Date, noteId: number) => {
-      const latlng = {
+    const createNoteData = (noteElement: Element, lastModified: Date, noteId: number): NoteFormat => {
+      const latlng: LatLngFormat = {
         lat: noteElement.getAttribute('lat'),
         lng: noteElement.getAttribute('lon'),
       }
@@ -441,14 +368,15 @@ else {
 
       return {
         'latlng': latlng,
-        'id': +noteId,
+        'id': noteId,
         'created': new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+00:00`)),
         'modified': new Date(lastModified.getTime()),
+        'deleted': status === 'closed' ? new Date(lastModified.getTime()) : null,
         'status': status,
       };
     }
 
-    const createNoteCommentData = (commentElement: Element, commentNum: number, noteId: number) => {
+    const createNoteCommentData = (commentElement: Element, commentNum: number, noteId: number): NoteCommentFormat => {
       const commentDate = new Date(Date.parse(`${commentElement.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+00:00`));
 
       let user = '';
@@ -458,7 +386,7 @@ else {
         userURL = commentElement.querySelector('user_url').textContent;
       }
       return {
-        'noteId': +noteId,
+        'noteId': noteId,
         'commentNum': commentNum,
         'date': commentDate,
         'user': user,

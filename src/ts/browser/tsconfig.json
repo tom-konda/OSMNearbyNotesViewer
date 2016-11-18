@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es2015",
     "module": "commonjs",
     "lib": [
       "dom",
@@ -10,8 +10,9 @@
       "node",
       "es6-promise",
       "sweetalert",
-      "leaflet"
+      "dexie"
     ],
+    "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "outDir": "./../../../temp/browser",
     "rootDir": ".",
