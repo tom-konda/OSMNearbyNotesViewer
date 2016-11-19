@@ -313,7 +313,7 @@ else {
         noteComments: [],
       }
 
-      db.notes.toArray().then(
+      db.notes.reverse().sortBy('created').then(
         (notes) => {
           const noteIds: number[] = [];
           notes.forEach(
