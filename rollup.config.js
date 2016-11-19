@@ -13,7 +13,7 @@ export default {
           chrome: 52,
           firefox: 48,
           safari: 9,
-          edge: 12,
+          edge: 13,
         }
       }
     )
