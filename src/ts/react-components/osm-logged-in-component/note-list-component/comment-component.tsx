@@ -1,5 +1,5 @@
 import React from 'react';
-
+import convertDatetoText from './convert-date-format';
 
 export default class CommentComponent extends React.Component<CommentComponentProps, void> {
   constructor(props: CommentComponentProps) {
@@ -28,7 +28,7 @@ export default class CommentComponent extends React.Component<CommentComponentPr
         <div className="comment-info">
           {userNameAndLink}
           <span className="submit-date">
-            <time dateTime={comment.date.toISOString()}>{comment.date.toLocaleString()}</time>
+            <time dateTime={comment.date.toISOString()}>{convertDatetoText((comment.date as Date))}</time>
           </span>
           <span className="user-action">{comment.action}</span>
         </div>

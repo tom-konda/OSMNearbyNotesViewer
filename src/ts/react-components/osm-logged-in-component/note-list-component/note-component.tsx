@@ -1,5 +1,6 @@
 import React from 'react';
 import CommentComponent from './comment-component';
+import convertDatetoText from './convert-date-format';
 
 export default class NoteComponent extends React.Component<NoteComponentProps, NoteComponentState> {
   private prePostState: null | NoteComponentState = null;
@@ -105,11 +106,11 @@ export default class NoteComponent extends React.Component<NoteComponentProps, N
     return (
       <section className="note" id={`note-${note.id}`}>
         <div className="note-info">
-          <span className="create-date">
-            <time dateTime={note.created.toISOString()}>{note.created.toLocaleString()}</time>
+          <span className="create-date">Created :
+            <time dateTime={note.created.toISOString()}>{convertDatetoText((note.created as Date))}</time>
           </span>
-          <span className="modified-date">
-            <time dateTime={note.modified.toISOString()}>{note.modified.toLocaleString()}</time>
+          <span className="modified-date">Modified :
+            <time dateTime={note.modified.toISOString()}>{convertDatetoText((note.modified as Date))}</time>
           </span>
           <span className="status">{note.status}</span>
           <div className="comment-list">
