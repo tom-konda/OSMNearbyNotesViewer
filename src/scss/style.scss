@@ -1,23 +1,60 @@
-article.comment > .commentText{
-  word-wrap: break-word;
-}
-
-#note-list > section + section{
-  border-top : 1px solid;
-}
-.comment-info > * + *,
-.note-info > * + *{
-  padding-left: 1em;
-}
-
 #note-list {
   flex: 1;
+  section + section{
+    border-top : 1px solid;
+  }
 }
 
-#map {
-  width: 700px;
-}
-
-#container {
+#note-map-container {
   display: flex;
+}
+
+#leaflet-wrapper {
+  height: 700px;
+  width: 700px;
+  position: relative;
+}
+
+#leaflet-container {
+  height: 700px;
+  width: 700px;
+  position: absolute;
+  top : 0;
+  left: 0;
+}
+
+.note-info > span + span {
+  margin-left: 1rem;
+}
+
+.comment-list {
+  counter-reset: noteComment;
+  article.comment::before {
+    counter-increment: noteComment;
+    content: counter(noteComment);
+    width: 2rem;
+    font-weight: 900;
+    text-align: right;
+  }
+
+  article.comment {
+    background: rgb(255, 255, 255);
+    display: flex;
+    flex-flow: row wrap;
+    .comment-info {
+      flex: 1;
+      span {
+        padding-left: 1rem;
+      }
+    }
+    .commentText {
+      word-wrap: break-word;
+      width: 100%;
+      padding-left: 3rem;
+    }
+  }
+
+  article.comment:nth-child(2n) {
+    background: rgb(250, 250, 250);
+  }
 }

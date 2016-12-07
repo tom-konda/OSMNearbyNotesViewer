@@ -1,17 +1,22 @@
 {
-    "compilerOptions": {
-        "target": "es6",
-        "module": "commonjs",
-        "noImplicitAny": false,
-        "outDir": "./../../../temp/browser",
-        "rootDir": ".",
-        "sourceMap": false
-    },
-    "files": [
-        "custom_typings/tsd.d.ts",
-        "../../typings/index.d.ts",
-        "coordinate-calc.ts",
-        "indexeddb-class.ts",
-        "main.ts"
-    ]
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "lib": [
+      "dom",
+      "es5"
+    ],
+    "types": [
+      "node",
+      "es6-promise",
+      "sweetalert",
+      "dexie"
+    ],
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "outDir": "./../../../temp/browser",
+    "rootDir": ".",
+    "sourceMap": false
+  },
+  "exclude": []
 }

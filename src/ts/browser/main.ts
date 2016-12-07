@@ -1,641 +1,399 @@
 'use strict';
-let osmAuth:osmAuthConstructor = require('osm-auth');
-let authConfig = <oauthJSONConfig>require('../../config/config.json');
-require('es6-promise').polyfill();
-require('leaflet.icon.glyph');
-import {IDBService} from './indexeddb-class';
-import {coordinateCalc} from './coordinate-calc';
+const OSMOAuthConfig = require('./osmOAuthInit');
+import { coordinateCalc } from './coordinate-calc';
+import { OSMNearbyNotesDatabase } from './dexie-db';
+import codePointAt = require('code-point-at');
 
-(function(){
-
-  let idbService = IDBService;
-
-  let idbReq = idbService.openDB('osmNearNotes', 1);
-
-  idbReq.addEventListener(
-    'upgradeneeded',
-    function(event) {
-      let oldVersion = event.oldVersion;
-      if(oldVersion < 1) {
-        // Create new indexedDB
-        let notesStore = idbService.createObjectStore('notes', 'id', false);
-        notesStore.createIndex(
-          'createdIdx',
-          'created',
-          {
-            'unique' : false,
-            'multiEntry' : false,
-          }
-        );
-
-        notesStore.createIndex(
-          'modifiedIdx',
-          'modified',
-          {
-            'unique' : false,
-            'multiEntry' : false,
-          }
-        );
-
-        let commentsStore = idbService.createObjectStore('comments', ['noteId', 'commentNum'], false);
-        commentsStore.createIndex(
-          'noteIdIdx',
-          'noteId',
-          {
-            'unique' : false,
-            'multiEntry' : false,
-          }
-        );
-      }
-    },
-    false
-  );
-
-  idbReq.addEventListener(
-    'success',
-    function(event) {
+if (typeof indexedDB === 'undefined') {
+  document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+      const reactRootWrapperElement = document.querySelector('#AppWrapper');
+      const notQualifiedBrowserEvent = new CustomEvent('notQualifiedBrowser');
+      reactRootWrapperElement.dispatchEvent(notQualifiedBrowserEvent);
     }
-  );
-
-  idbReq.addEventListener(
-    'error',
-    function(event) {
-      console.error((<any>event.target).errorCode);
-    },
-    false
-  );
-
-  document.addEventListener('DOMContentLoaded', function(event) {
-    let map = L.map(
-      'map',
-      {
-        scrollWheelZoom: false,
-      }
-    );
-    let markers = new L.MarkerClusterGroup();
-    let searchArea =  L.layerGroup();
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-      attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-    }).addTo(map);
-
-    let auth = new osmAuth(authConfig);
-
-    let getUserHomeLocation = function(){
-      return new Promise(function(resolve, reject){
-        auth.xhr({
-          method: 'GET',
-          path: '/api/0.6/user/details'
-        }, function(err, details) {
-          // details is an XML DOM of user details
-          if(err === null){
-            let homeLocation = details.querySelector('osm > user > home');
-            if(homeLocation !== null){
-              let coordinate:{lat:string, lon:string} = {
-                lat : homeLocation.getAttribute('lat'),
-                lon : homeLocation.getAttribute('lon'),
-              }
-              resolve(coordinate);
-              return ;
-            }
-            swal('Cannot get user home location.', 'error');
-            reject('Cannot get user home location.');
-          }
-          reject(err);
-        });
-      });
-    };
-
-    let getNotes = function(coordinate:{lat:string, lon:string}){
-      return new Promise(function(resolve, reject){
-        let edge = coordinateCalc.getCoordinateArea(coordinate, 10);
-        auth.xhr({
-          method: 'GET',
-          path: `/api/0.6/notes?limit=1000&bbox=${edge.w},${edge.s},${edge.e},${edge.n}`
-        }, function(err, details) {
-          searchArea.clearLayers();
-          if(err === null){
-            let notesList = (<XMLDocument>details).querySelectorAll('osm > note');
-
-            if(notesList.length){
-              let bounds = L.latLngBounds({lat : edge.s, lng : edge.w}, {lat : edge.n, lng : edge.e});
-              let areaRect = L.rectangle(bounds, {color: '#ff7800', weight: 1});
-              searchArea.addLayer(areaRect).addTo(map);
-              map.fitBounds(bounds);
-              resolve(notesList);
-              return;
-            }
-            swal('Cannot get comments around near your home location.', 'error');
-            reject('Cannot get comments around near your home location.');
-          }
-          reject(err);
-        });
-      });
-    };
-
-    let setNotesList = function(notesXML) {
-      let trans = idbService.getTransaction();
-      let notesOS = trans.objectStore('notes');
-      let commentsOS = trans.objectStore('comments');
-
-      for(let i = 0, notesCnt = notesXML.length; i < notesCnt; ++i){
-        let lastModified = new Date(0);
-        let noteId = notesXML[i].querySelector('id').textContent;
-
-        let commentList = notesXML[i].querySelectorAll('comments > comment');
-        for(let j = 0, commentCnt = commentList.length; j < commentCnt; ++j){
-          let date = commentList[j].querySelector('date').textContent;
-          let text = commentList[j].querySelector('text').textContent;
-          let action = commentList[j].querySelector('action').textContent;
-
-          let user = '';
-          let userURL = '';
-          if (commentList[j].querySelector('user')) {
-            user = commentList[j].querySelector('user').textContent;
-            userURL = commentList[j].querySelector('user_url').textContent;
-          }
-
-          let commentDate = new Date(Date.parse(`${date.split(' ').slice(0, 2).join('T')}+0000`));
-          let commentResult = commentsOS.put({
-            'noteId' : +noteId,
-            'commentNum' : j,
-            'date' : commentDate,
-            'user' : user,
-            'userURL' : userURL,
-            'text' : text,
-            'action' : action,
-          });
-
-          commentResult.addEventListener(
-            'success',
-            function(event){
-            }
-          )
-
-          commentResult.addEventListener(
-            'error',
-            function(event){
-              console.warn(event);
-            }
-          )
-          if (commentDate > lastModified) {
-            lastModified = commentDate;
-          }
-        }
-
-        let latlng = {
-          lat : notesXML[i].getAttribute('lat'),
-          lng : notesXML[i].getAttribute('lon'),
-        }
-
-        let created = notesXML[i].querySelector('date_created').textContent;
-        let status = notesXML[i].querySelector('status').textContent;
-        let notesResult = notesOS.put({
-          'latlng' : latlng,
-          'id' : +noteId,
-          'created' : new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
-          'modified' : new Date(lastModified.getTime()),
-          'status' : status,
-        });
-
-        let glyph:string,
-            glyphColor:string;
-        switch (status) {
-          case 'open':
-            glyph = 'close';
-            glyphColor = 'red';
-            break;
-
-          default:
-            glyph = 'check';
-            glyphColor = 'lime';
-            break;
-        }
-        let marker = L.marker(
-          latlng,
+  )
+}
+else {
+  (function () {
+    const db = new OSMNearbyNotesDatabase();
+    document.addEventListener(
+      'DOMContentLoaded',
+      () => {
+        const reactRootWrapperElement = document.querySelector('#AppWrapper');
+        const auth: osmAuthInstance = OSMOAuthConfig.OAuth;
+        const oauthReadyEvent = new CustomEvent(
+          'oauthReady',
           {
-            icon : L.icon.glyph({
-              className : 'fa',
-              prefix: 'fa',
-              glyph: glyph,
-              glyphColor: glyphColor,
-            })
-          }
-        );
-        markers.addLayer(marker);
-
-        notesResult.addEventListener(
-          'success',
-          function(event){
+            detail: auth
           }
         )
+        reactRootWrapperElement.dispatchEvent(oauthReadyEvent)
 
-        notesResult.addEventListener(
-          'error',
-          function(event){
-            console.error(event.error);
-          }
-        )
-      }
-
-      markers.addTo(map);
-    }
-
-    let displayNoteAndComment = function(){
-      let trans = idbService.getTransaction(undefined, 'readonly');
-      let notesOS = trans.objectStore('notes');
-      // Get newest note first
-      let notesIdx = notesOS.index('createdIdx');
-      let notesCursor = notesIdx.openCursor(null, 'prev');
-
-      let noteTemplate = (<HTMLTemplateElement>document.querySelector('#note-content'));
-      notesCursor.addEventListener(
-        'success',
-        function(event){
-          if(notesCursor.result){
-            let commentTemplate = (<HTMLTemplateElement>document.querySelector('#comment-content'));
-            let noteCursorVal = (<IDBCursorWithValue>notesCursor.result);
-            let noteId = noteCursorVal.value.id;
-
-            let noteStatus = noteTemplate.content.querySelector('.status');
-            noteStatus.textContent = `状態：${noteCursorVal.value.status}`;
-            let noteSection = noteTemplate.content.querySelector('section');
-            noteSection.id = `note-${noteId}`;
-            noteTemplate.content.querySelector('.create-date').firstChild.textContent = 'メモ作成日：';
-            let created = (<HTMLTimeElement>noteTemplate.content.querySelector('.create-date > time'));
-            created.dateTime = (<Date>noteCursorVal.value.created).toISOString();
-            created.textContent = (<Date>noteCursorVal.value.created).toLocaleString();
-            noteTemplate.content.querySelector('.modified-date').firstChild.textContent = 'メモ更新日：';
-            let modified = (<HTMLTimeElement>noteTemplate.content.querySelector('.modified-date > time'));
-            modified.dateTime = (<Date>noteCursorVal.value.modified).toISOString();
-            modified.textContent = (<Date>noteCursorVal.value.modified).toLocaleString();
-
-            noteSection.querySelector('form').id = `${noteSection.id}-form`;
-
-            noteSection.querySelector(`#${noteSection.id}-form > select`).id
-              = (<HTMLLabelElement>noteSection.querySelector(`#${noteSection.id}-form > label:first-child`)).htmlFor
-              = `${noteSection.id}-changeNoteStatus`;
-
-            if (noteCursorVal.value.status === 'closed') {
-               let options = noteSection.querySelectorAll(`#${noteSection.id}-form > select > option`)
-               for (let i = 0, cnt = options.length; i < cnt; ++i) {
-                 let option = <HTMLOptionElement>options.item(i);
-                 if (option.value) {
-                   option.disabled = !option.disabled;
-                 }
-               }
-            }
-            (<any>(<HTMLElement>noteSection.querySelector(`#${noteSection.id}-form > select`)).dataset).currentStatus = noteCursorVal.value.status;
-
-            noteSection.querySelector(`#${noteSection.id}-form > label > textarea`).id
-              = (<HTMLLabelElement>noteSection.querySelector(`#${noteSection.id}-form > label:last-child`)).htmlFor
-              = `${noteSection.id}-addNoteComment`;
-            noteSection.querySelector('button').setAttribute('form', `${noteSection.id}-form`);
-            let note = document.importNode(noteTemplate.content, true);
-            document.querySelector('#note-list').appendChild(note);
-
-            let submitButton = (document.querySelector(`#${noteSection.id}-form`));
-            submitButton.addEventListener(
-              'submit',
-              (event) => {
-                postCommentAndMemoState(event, noteId).then(
-                  updateNoteCommentsList,
-                  (reject) => console.error(reject)
-                ).then(
-                  updateNotesDisplay,
-                  (reject) => console.error(reject)
-                );
-                event.preventDefault();
-              },
-              false
-            )
-
-            let commentsOS = trans.objectStore('comments');
-            let commentsIdx = commentsOS.index('noteIdIdx');
-
-            let commentRange = IDBKeyRange.only(noteCursorVal.value.id);
-            let commentCursor = commentsIdx.openCursor(commentRange);
-            commentCursor.addEventListener(
-              'success',
-              function(event) {
-                if (commentCursor.result === null) {
-                  // コメントがなくなったら次のメモに移動
-                  noteCursorVal.advance(1);
+        window.addEventListener(
+          'oauthButtonClicked',
+          (event) => {
+            auth.authenticate(
+              (error, oauth) => {
+                if (error) {
+                  console.error(error)
                 }
                 else {
-                  let commCursorVal = (<IDBCursorWithValue>commentCursor.result);
-
-                  let comment = <HTMLElement>document.importNode(commentTemplate.content, true);
-                  let commentText = comment.querySelector('p.commentText');
-                  commentText.textContent = commCursorVal.value.text;
-                  let commentDate = (<HTMLTimeElement>comment.querySelector('time'));
-                  commentDate.dateTime = (<Date>commCursorVal.value.date).toISOString();
-                  commentDate.textContent = (<Date>commCursorVal.value.date).toLocaleString();
-                  let userAction = comment.querySelector('.user-action');
-                  userAction.textContent = `${commCursorVal.value.action}`;
-
-                  if (commCursorVal.value.user) {
-                    let userOSMPage = (<HTMLAnchorElement>comment.querySelector('span.user-osm-page > a'));
-                    userOSMPage.textContent = commCursorVal.value.user;
-                    userOSMPage.href = commCursorVal.value.userURL;
-                  }
-                  else {
-                    let userOSMPage = (<HTMLSpanElement>comment.querySelector('span.user-osm-page'));
-                    userOSMPage.removeChild(userOSMPage.querySelector('a'));
-                    userOSMPage.textContent = 'annonymous user';
-                  }
-                  document.querySelector(`#note-${noteCursorVal.value.id} > div > .comment-list`).appendChild(comment);
-                  commCursorVal.advance(1);
+                  const oauthReadyEvent = new CustomEvent(
+                    'oauthReady',
+                    {
+                      detail: auth
+                    }
+                  )
+                  reactRootWrapperElement.dispatchEvent(oauthReadyEvent)
                 }
               }
             );
           }
-        }
-      );
-    }
+        )
 
-    let postCommentAndMemoState = function(event:Event, noteId:string) {
-      return new Promise(
-        (resolve, reject) => {
-          let select = (<HTMLSelectElement>document.querySelector(`#note-${noteId}-changeNoteStatus`));
-          let textarea = (<HTMLTextAreaElement>document.querySelector(`#note-${noteId}-addNoteComment`));
-          let fixedEncodeURIComponent = (str:string) => encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + c.codePointAt(0).toString(16));
-          let params:osmAuthXHROptions;
-          if (select.value) {
-            switch (select.value) {
-              case 'closed' :
-                params = {
-                  path : `/api/0.6/notes/${noteId}/close`,
-                  method : 'POST',
-                }
-
-                if (textarea.value.length > 0) {
-                  params.content = `text=${fixedEncodeURIComponent(textarea.value)}`;
-                }
-                auth.xhr(
-                  params,
-                  (err, xhr) => {
-                    if (err === null) {
-                      (<any>(<HTMLElement>select).dataset).currentStatus = 'closed';
-                      resolve({action : 'closed', noteId : noteId, response : xhr});
-                    }
-                    else {
-                      switch (err.status) {
-                        case 409:
-                          swal('409');
-                          break;
-                        case 410:
-                          swal('410');
+        window.addEventListener(
+          'getNearbyNotesClicked',
+          (event: CustomEvent) => {
+            const getUserHomeLocation = () => {
+              return new Promise(function (resolve, reject) {
+                auth.xhr({
+                  method: 'GET',
+                  path: '/api/0.6/user/details'
+                }, function (error: any, details: XMLDocument) {
+                  // details is an XML DOM of user details
+                  if (error === null) {
+                    const homeLocation = details.querySelector('osm > user > home');
+                    const userName = details.querySelector('osm > user').getAttribute('display_name');
+                    if (homeLocation !== null) {
+                      let coordinate: { lat: string, lon: string } = {
+                        lat: homeLocation.getAttribute('lat'),
+                        lon: homeLocation.getAttribute('lon'),
                       }
-                      reject(err.responseText);
+                      const receiveDataEvent = new CustomEvent(
+                        'receiveCoordinate',
+                        {
+                          detail: {
+                            homeCoordinate: coordinate,
+                            userName: userName
+                          },
+                        }
+                      );
+                      reactRootWrapperElement.dispatchEvent(receiveDataEvent);
+                      resolve(coordinate);
+                      return;
                     }
+                    swal('Cannot get user home location.', 'error');
+                    reject('Cannot get user home location.');
                   }
-                );
-                break;
-              case 'reopened' :
-                params = {
-                  path : `/api/0.6/notes/${noteId}/reopen`,
-                  method : 'POST',
-                }
-
-                if (textarea.value.length > 0) {
-                  params.content = `text=${fixedEncodeURIComponent(textarea.value)}`;
-                }
-                auth.xhr(
-                  params,
-                  (err, xhr) => {
-                    if (err === null) {
-                      (<any>(<HTMLElement>select).dataset).currentStatus = 'opened';
-                      resolve({action : 'reopened', noteId : noteId, response : xhr});
-                    }
-                    else {
-                      switch (err.status) {
-                        case 409:
-                          swal('409');
-                          break;
-                        case 410:
-                          swal('410');
-                          break;
-                      }
-                      reject(err.responseText);
-                    }
-                  }
-                );
-                break;
-            }
-          }
-          else if(textarea.value.length > 0) {
-            params = {
-              path : `/api/0.6/notes/${noteId}/comment`,
-              method : 'POST',
-              content : `text=${fixedEncodeURIComponent(textarea.value)}`,
-            }
-
-            auth.xhr(
-              params,
-              (err, responseXML) => {
-                if (err === null) {
-                  resolve({action : 'commented', noteId : noteId, response : responseXML});
-                }
-                else {
-                  switch (err.status) {
-                    case 409:
-                      swal('409');
-                      break;
-                    case 410:
-                      swal('410');
-                      break;
-                  }
-                  reject(err.responseText);
-                }
-              }
-            );
-          }
-        }
-      );
-    }
-
-    let updateNoteCommentsList = (xhrResult) => {
-      return new Promise(
-        (resolve, reject) => {
-          let noteId = xhrResult.noteId;
-          let trans = idbService.getTransaction();
-          let notesOS = trans.objectStore('notes');
-          let commentsOS = trans.objectStore('comments');
-          let isOpened = true;
-          let lastModified = new Date(0);
-
-          let lastCommentsCount = 0;
-          let storedCommentsCount = 0;
-
-          let response = <XMLDocument>xhrResult.response;
-          let commentsIdx = commentsOS.index('noteIdIdx');
-
-          let noteKeyRange = IDBKeyRange.only(noteId);
-          let noteCommentsRequest = commentsIdx.count(noteKeyRange);
-
-          noteCommentsRequest.onsuccess = (
-            () => {
-              storedCommentsCount = noteCommentsRequest.result;
-
-              let lastComments = response.querySelectorAll('comments > comment');
-              lastCommentsCount = response.querySelectorAll('comments > comment').length;
-
-              for (let i = storedCommentsCount; i < lastCommentsCount; ++i) {
-                let comment = lastComments[i];
-                let commentDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
-
-                let user = '';
-                let userURL = '';
-                if (comment.querySelector('user')) {
-                  user = comment.querySelector('user').textContent;
-                  userURL = comment.querySelector('user_url').textContent;
-                }
-                let commentResult = commentsOS.add({
-                  'noteId' : +noteId,
-                  'commentNum' : i,
-                  'date' : commentDate,
-                  'user' : user,
-                  'userURL' : userURL,
-                  'text' : comment.querySelector('text').textContent,
-                  'action' : comment.querySelector('action').textContent,
+                  reject(error);
                 });
-
-                commentResult.addEventListener(
-                  'success',
-                  (event) => {}
-                )
-
-                commentResult.addEventListener(
-                  'error',
-                  (event) => {
-                    console.warn(event);
-                    return reject(event);
-                  }
-                )
-
-                if (commentDate > lastModified) {
-                  lastModified = commentDate;
-                }
-              }
-
-            }
-          );
-
-          noteCommentsRequest.onerror = (
-            (event) => {
-              console.warn(event);
-              return reject(event);
-            }
-          );
-
-          if (xhrResult.action !== 'commented') {
-            if(xhrResult.action === 'closed'){
-              isOpened = false;
-            }
-          }
-
-          let latlng = {
-            lat : response.querySelector('note').getAttribute('lat'),
-            lng : response.querySelector('note').getAttribute('lon'),
-          }
-
-          let created = response.querySelector('date_created').textContent;
-          let status = response.querySelector('status').textContent;
-
-          let notesResult = notesOS.put({
-            'latlng' : latlng,
-            'id' : +noteId,
-            'created' : new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+0000`)),
-            'modified' : new Date(lastModified.getTime()),
-            'status' : status,
-          });
-
-          notesResult.addEventListener(
-            'success',
-            (event) => {
-              return resolve({
-                'displayedCommentsCount' : storedCommentsCount,
-                'currentStoredCommentsCount' : lastCommentsCount,
-                'responseXML' : response,
-                'lastModified' : lastModified,
-                'noteId' : +noteId,
-                'isOpened' : isOpened,
               });
+            };
+
+            const getNotes = (coordinate: { lat: string, lon: string }) => {
+              return new Promise((resolve, reject) => {
+                const edge = coordinateCalc.getCoordinateArea(coordinate, 10);
+                auth.xhr({
+                  method: 'GET',
+                  path: `/api/0.6/notes?limit=1000&bbox=${edge.w},${edge.s},${edge.e},${edge.n}`
+                }, function (error: any, details: XMLDocument) {
+                  if (error === null) {
+                    const notesList = details.querySelectorAll('osm > note');
+
+                    if (notesList.length) {
+                      resolve(notesList);
+                      return;
+                    }
+                    swal('Cannot get comments around near your home location.', 'error');
+                    reject('Cannot get comments around near your home location.');
+                  }
+                  reject(error);
+                });
+              });
+            };
+
+            const setNotesList = (notesXML: NodeListOf<Element>) => {
+              const noteData: NoteFormat[] = [];
+              for (let i = 0, notesCnt = notesXML.length; i < notesCnt; ++i) {
+                let lastModified = new Date(0);
+                let noteId = notesXML[i].querySelector('id').textContent;
+
+                let commentList = notesXML[i].querySelectorAll('comments > comment');
+                const noteCommentsData: NoteCommentFormat[] = [];
+                for (let j = 0, commentCnt = commentList.length; j < commentCnt; ++j) {
+                  let date = commentList[j].querySelector('date').textContent;
+                  let commentDate = new Date(Date.parse(`${date.split(' ').slice(0, 2).join('T')}+00:00`));
+                  noteCommentsData.push(createNoteCommentData(commentList[j], j, Number(noteId)));
+                  if (commentDate > lastModified) {
+                    lastModified = commentDate;
+                  }
+                }
+                db.comments.bulkPut(noteCommentsData).catch((error) => Promise.reject(error));
+                noteData.push(createNoteData(notesXML[i], lastModified, Number(noteId)));
+              }
+              return db.notes.bulkPut(noteData);
+            }
+
+            getUserHomeLocation().then(
+              getNotes
+            ).then(
+              setNotesList
+              ).then(
+              () => findNotes(null)
+              ).catch((error) => {
+                if (error instanceof XMLHttpRequest) {
+                  swal(error.statusText, error.responseText, 'error');
+                  console.error(error);
+                }
+                else {
+                  console.error(error);
+                }
+              });
+          }
+        );
+
+        window.addEventListener(
+          'submitButtonClicked',
+          (event: CustomEvent) => {
+            event.preventDefault();
+            const noteId: number = +event.detail.noteId;
+            const target = event.detail.target;
+            const noteComponentElement = document.querySelector(`#note-${noteId}`)
+
+            const postCommentAndMemoState = (target: Element, noteId: number) => {
+              return new Promise(
+                (resolve, reject) => {
+                  const osmXHRPost = (action: string, params: any) => {
+                    auth.xhr(
+                      params,
+                      (error, xhr) => {
+                        if (error === null) {
+                          resolve({ action: action, noteId: noteId, response: xhr });
+                        }
+                        else if (error instanceof XMLHttpRequest) {
+                          switch (error.status) {
+                            case 409:
+                              swal(error.statusText, error.responseText, 'error');
+                              break;
+                            case 410:
+                              swal(error.statusText, error.responseText, 'error');
+                          }
+                          reject(error.responseText);
+                        }
+                        else {
+                          reject(error);
+                        }
+                      }
+                    );
+                  }
+
+                  const select = (target.querySelector(`#note-${noteId}-changeNoteStatus`) as HTMLSelectElement);
+                  const textarea = (document.querySelector(`#note-${noteId}-addNoteComment`) as HTMLTextAreaElement);
+                  const fixedEncodeURIComponent = (str: string) => encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + codePointAt(c, 0).toString(16));
+                  let params: osmAuthXHROptions;
+                  if (select.value) {
+                    switch (select.value) {
+                      case 'closed':
+                        params = {
+                          path: `/api/0.6/notes/${noteId}/close`,
+                          method: 'POST',
+                        }
+                        break;
+                      case 'reopened':
+                        params = {
+                          path: `/api/0.6/notes/${noteId}/reopen`,
+                          method: 'POST',
+                        }
+
+                        break;
+                      default:
+                        reject('unknown action')
+                        return;
+                    }
+
+                    if (textarea.value.length > 0) {
+                      params.content = `text=${fixedEncodeURIComponent(textarea.value)}`;
+                    }
+                    osmXHRPost(select.value, params);
+                  }
+                  else if (textarea.value.length > 0) {
+                    params = {
+                      path: `/api/0.6/notes/${noteId}/comment`,
+                      method: 'POST',
+                      content: `text=${fixedEncodeURIComponent(textarea.value)}`,
+                    }
+                    osmXHRPost('commented', params);
+                  }
+                }
+              );
+            }
+
+            const updateNoteCommentsList = (xhrResult: any) => {
+              return new Promise(
+                (resolve, reject) => {
+                  const unloadComments: NoteCommentFormat[] = [];
+                  let noteData: NoteFormat;
+                  let lastModified = new Date(0);
+
+                  let latestCommentsCount = 0;
+                  let storedCommentsCount = 0;
+
+                  const response = <XMLDocument>xhrResult.response;
+                  db.comments.count().then(
+                    (rowCount) => {
+                      storedCommentsCount = rowCount;
+
+                      const latestComments = response.querySelectorAll('comments > comment');
+                      latestCommentsCount = response.querySelectorAll('comments > comment').length;
+
+                      for (let i = storedCommentsCount; i < latestCommentsCount; ++i) {
+                        let comment = latestComments[i];
+                        let commentDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+00:00`));
+                        let commentData = createNoteCommentData(comment, i, noteId);
+                        unloadComments.push(commentData)
+
+                        if (commentDate > lastModified) {
+                          lastModified = commentDate;
+                        }
+                      }
+                      return db.comments.bulkAdd(unloadComments);
+                    }
+                  ).then(
+                    (comment) => {
+                      noteData = createNoteData(response.querySelector('note'), lastModified, noteId);
+                      return db.notes.put(noteData);
+                    }
+                    ).then(
+                    () => {
+                      return resolve({
+                        'unloadComments': unloadComments,
+                        'lastModified': lastModified,
+                        'noteStatus': noteData.status,
+                      });
+                    }
+                    ).catch(
+                    (error) => {
+                      reject(error);
+                    }
+                    );
+                }
+              );
+            }
+
+            postCommentAndMemoState(target, noteId).then(
+              updateNoteCommentsList,
+            ).then(
+              (modifiedNoteData) => {
+                const submitSuccessEvent = new CustomEvent(
+                  'submitSuccess',
+                  {
+                    detail: modifiedNoteData,
+                  }
+                );
+                noteComponentElement.dispatchEvent(submitSuccessEvent);
+              },
+            ).catch((error: Error) => {
+              console.error(error);
+              const submitFailureEvent = new Event('submitFailure');
+              noteComponentElement.dispatchEvent(submitFailureEvent);
+            });
+          }
+        )
+      }
+    )
+
+    const findNotes = (condition: any) => {
+      let foundNotes: {
+        notes: NoteFormat[],
+        noteComments: { [key: number]: NoteCommentFormat[] },
+      }
+      foundNotes = {
+        notes: [],
+        noteComments: [],
+      }
+
+      db.notes.reverse().sortBy('created').then(
+        (notes) => {
+          const noteIds: number[] = [];
+          notes.forEach(
+            (note) => {
+              foundNotes.notes.push(note);
+              noteIds.push(note.id);
+            }
+          )
+          return Promise.resolve(noteIds);
+        }
+      ).then(
+        (noteIds) => {
+          return Promise.all(
+            noteIds.map(
+              (noteId) => {
+                return db.comments.where('noteId').equals(noteId).toArray().then(
+                  (comments) => {
+                    comments.forEach(
+                      (comment) => {
+                        const noteId = comment.noteId;
+                        foundNotes.noteComments[noteId] = comments;
+                      }
+                    )
+                  }
+                );
+              }
+            )
+          )
+        }
+        ).then(
+        () => {
+          const foundNotesEvent = new CustomEvent(
+            'foundNotesAndNoteComments',
+            {
+              detail: foundNotes,
             }
           );
+          const reactRootWrapperElement = document.querySelector('#AppWrapper');
+          reactRootWrapperElement.dispatchEvent(foundNotesEvent);
         }
-      );
+        )
     }
 
-    let updateNotesDisplay = (updateResult) => {
-      console.log(updateResult, 'アップデート')
-      let displayedCommentCount = updateResult.displayedCommentsCount;
-      let currentStoredCommentsCount = updateResult.currentStoredCommentsCount;
-      let commentTemplate = (<HTMLTemplateElement>document.querySelector('#comment-content'));
-      let noteId = updateResult.noteId;
-      let response = <XMLDocument>updateResult.responseXML;
-      let lastModified = <Date>updateResult.lastModified;
-      let comments = response.querySelectorAll('comments > comment');
-
-      document.querySelector(`#note-${noteId} .status`).textContent = response.querySelector('status').textContent;
-      let noteModifiedElement = <HTMLTimeElement>document.querySelector(`#note-${noteId} span.modified-date > time`);
-      noteModifiedElement.dateTime = lastModified.toISOString();
-      noteModifiedElement.textContent = lastModified.toLocaleString();
-
-      for (let i = displayedCommentCount; i < currentStoredCommentsCount; i++) {
-        let comment = comments[i];
-
-        let commentDOM = <HTMLElement>document.importNode(commentTemplate.content, true);
-
-        let commentText = commentDOM.querySelector('p.commentText');
-        commentText.textContent = comment.querySelector('text').textContent;
-        let commentDate = (<HTMLTimeElement>commentDOM.querySelector('time'));
-        let xmlDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+0000`));
-        commentDate.dateTime = xmlDate.toISOString();
-        commentDate.textContent = xmlDate.toLocaleString();
-        let userAction = commentDOM.querySelector('.user-action');
-        userAction.textContent = comment.querySelector('action').textContent;
-
-        if (comment.querySelector('user')) {
-          let userOSMPage = (<HTMLAnchorElement>commentDOM.querySelector('span.user-osm-page > a'));
-          userOSMPage.textContent = comment.querySelector('user').textContent;
-          userOSMPage.href = comment.querySelector('user_url').textContent;
-        }
-        else {
-          let userOSMPage = (<HTMLSpanElement>commentDOM.querySelector('span.user-osm-page'));
-          userOSMPage.removeChild(userOSMPage.querySelector('a'));
-          userOSMPage.textContent = 'annonymous user';
-        }
-        document.querySelector(`#note-${noteId} > div > .comment-list`).appendChild(commentDOM);
+    const createNoteData = (noteElement: Element, lastModified: Date, noteId: number): NoteFormat => {
+      const latlng: LatLngFormat = {
+        lat: noteElement.getAttribute('lat'),
+        lng: noteElement.getAttribute('lon'),
       }
 
-      (<HTMLTextAreaElement>document.querySelector(`#note-${noteId}-addNoteComment`)).value = '';
+      const created = noteElement.querySelector('date_created').textContent;
+      const status = noteElement.querySelector('status').textContent;
+
+      return {
+        'latlng': latlng,
+        'id': noteId,
+        'created': new Date(Date.parse(`${created.split(' ').slice(0, 2).join('T')}+00:00`)),
+        'modified': new Date(lastModified.getTime()),
+        'deleted': status === 'closed' ? new Date(lastModified.getTime()) : null,
+        'status': status,
+      };
     }
 
-    let button = document.getElementById('get-near-notes');
-    button.addEventListener(
-      'click',
-      function(){
-        if (auth.authenticated()) {
-          getUserHomeLocation().then(
-            getNotes,
-            (error) => console.error(error)
-          ).then(
-            setNotesList,
-            (error) => console.error(error)
-          ).then(
-            displayNoteAndComment,
-            (error) => console.error(error)
-          );
-        }
-        else {
-          auth.authenticate(() => {console.log(arguments)});
-        }
-      }
-    );
-  });
+    const createNoteCommentData = (commentElement: Element, commentNum: number, noteId: number): NoteCommentFormat => {
+      const commentDate = new Date(Date.parse(`${commentElement.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+00:00`));
 
-  document.addEventListener('displayThread', function(){
-    ;
-  });
-})();
+      let user = '';
+      let userURL = '';
+      if (commentElement.querySelector('user')) {
+        user = commentElement.querySelector('user').textContent;
+        userURL = commentElement.querySelector('user_url').textContent;
+      }
+      return {
+        'noteId': noteId,
+        'commentNum': commentNum,
+        'date': commentDate,
+        'user': user,
+        'userURL': userURL,
+        'text': commentElement.querySelector('text').textContent,
+        'action': commentElement.querySelector('action').textContent,
+      };
+    }
+  })();
+}

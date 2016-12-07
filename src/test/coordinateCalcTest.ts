@@ -1,15 +1,15 @@
 'use strict';
 
 const mocha = require('mocha');
-let assert = require('power-assert');
+import assert = require('assert');
 let coordinateCalc = require('../../temp/browser/coordinate-calc').coordinateCalc;
 
 describe(
   'Coordinate Calc Test',
   function () {
     let testCoordinate = {
-      lat : 40.0,
-      lon : 140.0,
+      lat: 40.0,
+      lon: 140.0,
     }
     it(
       'Positive lat and positive lng',
@@ -19,8 +19,8 @@ describe(
       }
     );
     testCoordinate = {
-      lat : -40.0,
-      lon : 140.0,
+      lat: -40.0,
+      lon: 140.0,
     }
     it(
       'Negative lat and positive lng',
@@ -30,8 +30,8 @@ describe(
       }
     );
     testCoordinate = {
-      lat : 40.0,
-      lon : -140.0,
+      lat: 40.0,
+      lon: -140.0,
     }
     it(
       'Positive lat and negative lng',
@@ -41,8 +41,8 @@ describe(
       }
     );
     testCoordinate = {
-      lat : -40.0,
-      lon : -140.0,
+      lat: -40.0,
+      lon: -140.0,
     }
     it(
       'Negative lat and negative lng',
@@ -52,8 +52,8 @@ describe(
       }
     );
     testCoordinate = {
-      lat : 40.0,
-      lon : -180.0,
+      lat: 40.0,
+      lon: -180.0,
     }
     it(
       'West edge lng',
@@ -64,8 +64,8 @@ describe(
     );
 
     testCoordinate = {
-      lat : 40.0,
-      lon : 180.0,
+      lat: 40.0,
+      lon: 180.0,
     }
     it(
       'East edge lng',
