@@ -24,7 +24,7 @@
     "rollup:watch-react": "rollup -m inline -w -c",
     "watchify-browser": "watchify -d --entry temp/browser/main.js -o ./build/js/main.js",
     "watchify-react": "watchify -d --entry temp/react-components/react-app.js -o build/js/react-app.js",
-    "test": "mocha --require ./src/test/espower-typescript-loader src/test/**.ts"
+    "test": "mocha  --compilers ts:espower-typescript/guess src/test/**.ts"
   },
   "browserify": {
     "transform": [
@@ -80,7 +80,7 @@
     "tslint-eslint-rules": "^2.1.0",
     "tslint-react": "^1.1.0",
     "typedoc": "^0.5.0",
-    "typescript": "^2.0.6",
+    "typescript": "^2.0.10",
     "watchify": "^3.7.0",
     "xml2js": "^0.4.16"
   },
