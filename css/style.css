@@ -41,6 +41,7 @@
 }
 
 .comment-list article.comment {
+  background: white;
   display: flex;
   flex-flow: row wrap;
 }
@@ -57,4 +58,8 @@
   word-wrap: break-word;
   width: 100%;
   padding-left: 3rem;
+}
+
+.comment-list article.comment:nth-child(2n) {
+  background: #fafafa;
 }
