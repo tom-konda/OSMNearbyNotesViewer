@@ -3,7 +3,7 @@
     module.exports = {
       "oauth_consumer_key": "Z611MoJM00zYejh6RtSU8GjbcaolTCFEAyCEK7CV",
       "oauth_secret": "hPQ2xIcSW89jOECMd5kZ5GdlMQRdWPL4rLtiRMOW",
-      "url": "http://www.openstreetmap.org",
+      "url": "https://www.openstreetmap.org",
       "auto": true,
       "landing": "land.html",
       "singlepage": false
