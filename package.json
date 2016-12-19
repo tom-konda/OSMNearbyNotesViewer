@@ -1,9 +1,10 @@
 {
   "name": "osmnearbynotesviewer",
-  "version": "0.0.2",
+  "version": "0.1.1",
   "description": "Reply to OSM Notes like comment form around home location.",
   "scripts": {
     "browser-sync": "browser-sync start --server --files 'build/**/*' --directory",
+    "browser-sync:https": "browser-sync start --server --https --files 'build/**/*' --directory",
     "prebuild": "npm-run-all clean tslint:*",
     "build": "npm-run-all pug:build --parallel ts:build-* scss:build-* --serial mkdir-builddir rollup:build-* browserify-*",
     "clean": "node -e \"require('shelljs').rm('-R', ['temp', 'build']);\"",
@@ -24,7 +25,7 @@
     "rollup:watch-react": "rollup -m inline -w -c",
     "watchify-browser": "watchify -d --entry temp/browser/main.js -o ./build/js/main.js",
     "watchify-react": "watchify -d --entry temp/react-components/react-app.js -o build/js/react-app.js",
-    "test": "mocha  --compilers ts:espower-typescript/guess src/test/**.ts"
+    "test": "mocha --compilers ts:espower-typescript/guess src/test/**.ts"
   },
   "browserify": {
     "transform": [
