@@ -20,7 +20,11 @@ export default class NoteComponent extends React.Component<NoteComponentProps, N
         const currentPostState = this.prePostState;
         currentPostState.currentNote.modified = modifiedNoteData.lastModified;
         currentPostState.currentNote.status = modifiedNoteData.noteStatus;
-        Array.prototype.push.apply(currentPostState.currentNoteComments, modifiedNoteData.unloadComments);
+        modifiedNoteData.unloadComments.forEach(
+          (unloadComment: any) => {
+            currentPostState.currentNoteComments.push(unloadComment);
+          }
+        );
 
         this.setState(currentPostState);
         this.prePostState = null
