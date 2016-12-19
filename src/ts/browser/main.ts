@@ -240,7 +240,7 @@ else {
                   let storedCommentsCount = 0;
 
                   const response = <XMLDocument>xhrResult.response;
-                  db.comments.count().then(
+                  db.comments.where('noteId').equals(noteId).count().then(
                     (rowCount) => {
                       storedCommentsCount = rowCount;
 
