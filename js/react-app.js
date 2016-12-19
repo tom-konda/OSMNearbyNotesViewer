@@ -73,7 +73,9 @@
             var currentPostState = this$1.prePostState;
             currentPostState.currentNote.modified = modifiedNoteData.lastModified;
             currentPostState.currentNote.status = modifiedNoteData.noteStatus;
-            Array.prototype.push.apply(currentPostState.currentNoteComments, modifiedNoteData.unloadComments);
+            modifiedNoteData.unloadComments.forEach(function (unloadComment) {
+              currentPostState.currentNoteComments.push(unloadComment);
+            });
             this$1.setState(currentPostState);
             this$1.prePostState = null;
           });
