@@ -20,6 +20,7 @@
     "quotemark": [
       true,
       "single",
+      "jsx-double",
       "avoid-escape"
     ],
     "triple-equals": [
