@@ -45,7 +45,6 @@
   "author": "tom-konda",
   "license": "MIT",
   "dependencies": {
-    "code-point-at": "^1.1.0",
     "dexie": "^2.0.0-beta.11",
     "es6-promise": "^4.1.0",
     "leaflet.icon.glyph": "^0.2.0",
