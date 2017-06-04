@@ -1,5 +1,6 @@
 {
   "name": "osmnearbynotesviewer",
+  "private": true,
   "version": "0.1.2",
   "description": "Reply to OSM Notes like comment form around home location.",
   "scripts": {
