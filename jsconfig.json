@@ -3,7 +3,7 @@
         "target": "es6",
         "module": "commonjs"
     },
-    "files": [
-        "rollup.config.js"
+    "include": [
+        "rollup_configs/**.js"
     ]
 }
