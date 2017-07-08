@@ -1,7 +1,7 @@
 /node_modules
 .DS_Store
 Thumb.db
-/src/ts/browser/tsconfigs/es5
+/config/config.js
 /config/config.json
 /config/test.config.json
 /src/typings

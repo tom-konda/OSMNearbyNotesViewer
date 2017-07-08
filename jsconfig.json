@@ -1,9 +1,17 @@
 {
     "compilerOptions": {
-        "target": "es6",
-        "module": "commonjs"
-    },
-    "files": [
-        "rollup.config.js"
-    ]
+        "target": "es2015",
+        "module": "es2015",
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitUseStrict": false,
+        "emitBOM": false,
+        "newLine": "LF"
+    }
 }
