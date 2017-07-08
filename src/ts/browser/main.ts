@@ -21,7 +21,7 @@ else {
       'DOMContentLoaded',
       () => {
         const reactRootWrapperElement = document.querySelector('#AppWrapper');
-        const auth: osmAuthInstance = OSMOAuthConfig.OAuth;
+        const auth: OSMAuth.OSMAuthInstance = OSMOAuthConfig.OAuth;
         const oauthReadyEvent = new CustomEvent(
           'oauthReady',
           {
@@ -191,7 +191,7 @@ else {
                   const select = (target.querySelector(`#note-${noteId}-changeNoteStatus`) as HTMLSelectElement);
                   const textarea = (document.querySelector(`#note-${noteId}-addNoteComment`) as HTMLTextAreaElement);
                   const fixedEncodeURIComponent = (str: string) => encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + codePointAt(c, 0).toString(16));
-                  let params: osmAuthXHROptions;
+                  let params: OSMAuth.OSMAuthXHROptions;
                   if (select.value) {
                     switch (select.value) {
                       case 'closed':
