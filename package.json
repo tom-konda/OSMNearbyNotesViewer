@@ -15,7 +15,7 @@
     "mkdir-builddir": "node -e \"require('shelljs').mkdir('build/js');\"",
     "browserify-browser": "browserify --entry temp/browser/main.js -o ./build/js/main.js",
     "browserify-react": "browserify --entry temp/react-components/react-app.js -o build/js/react-app.js",
-    "rollup:build-react": "rollup -c",
+    "rollup:build-react": "rollup -c ./rollup_configs/rollup.config.js",
     "ts:build-browser": "tsc -p ./src/ts/browser",
     "ts:build-renderer-react-components": "tsc -p ./src/ts/react-components",
     "watch-all": "npm-run-all --parallel pug:watch-* ts:watch-* scss:watch-* watchify-*",
@@ -23,7 +23,7 @@
     "scss:watch-common": "node-sass --source-map true --source-map-embed true -w -r --output-style expanded -o ./build/css ./src/scss",
     "ts:watch-browser": "tsc --inlineSourceMap -w -p ./src/ts/browser",
     "ts:watch-react-components": "tsc --inlineSourceMap -w -p ./src/ts/react-components",
-    "rollup:watch-react": "rollup -m inline -w -c",
+    "rollup:watch-react": "rollup -m inline -w -c ./rollup_configs/dev.rollup.config.js",
     "watchify-browser": "watchify -d --entry temp/browser/main.js -o ./build/js/main.js",
     "watchify-react": "watchify -d --entry temp/react-components/react-app.js -o build/js/react-app.js",
     "test": "mocha --compilers ts:espower-typescript/guess src/test/**.ts"
