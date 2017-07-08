@@ -1,10 +1,10 @@
 import buble from 'rollup-plugin-buble'
 
 export default {
-  entry: './temp/browser/main.js',
+  entry: './temp/react-components/app-main.js',
   format: 'iife',
   targets: [
-    { dest: './build/js/main.js' }
+    { dest: './build/js/react-app.js' }
   ],
   plugins: [
     buble(
