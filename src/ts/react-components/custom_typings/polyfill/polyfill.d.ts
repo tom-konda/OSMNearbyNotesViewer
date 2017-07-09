@@ -26,5 +26,5 @@ interface Window {
 }
 
 interface HTMLTimeElement extends HTMLElement {
-  dateTime : String,
+  dateTime : string,
 }

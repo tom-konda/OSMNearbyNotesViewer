@@ -1,9 +1,11 @@
+import * as OSMAuth from 'osm-auth';
+
 interface AppDefaultComponentProps {
 }
 
 interface AppComponentState {
   isOAuthReady: boolean,
-  OSMOAuth: OSMAuth.OSMAuthInstance | null,
+  OSMOAuth: OSMAuth.OSMAuthInstance,
   isAuthenticated: boolean,
   isQuarifiedBrowser: boolean,
 }
