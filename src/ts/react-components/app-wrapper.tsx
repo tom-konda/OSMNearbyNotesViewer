@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import OSMLoggedInComponent from './osm-logged-in-component/osm-logged-in-component';
 
 export default class AppComponent extends React.Component<AppDefaultComponentProps, AppComponentState> {
@@ -12,10 +12,10 @@ export default class AppComponent extends React.Component<AppDefaultComponentPro
     }
   }
   componentDidMount() {
-    const reactRootWrapperElement = document.querySelector('#AppWrapper');
+    const reactRootWrapperElement = document.querySelector('#AppWrapper') as HTMLElement;
     reactRootWrapperElement.addEventListener(
       'notQualifiedBrowser',
-      (event: CustomEvent) => {
+      () => {
         this.setState({
           isOAuthReady: false,
           OSMOAuth: null,
@@ -27,7 +27,7 @@ export default class AppComponent extends React.Component<AppDefaultComponentPro
     reactRootWrapperElement.addEventListener(
       'oauthReady',
       (event: CustomEvent) => {
-        const auth: osmAuthInstance = event.detail;
+        const auth = event.detail;
         this.setState({
           isOAuthReady: true,
           OSMOAuth: auth,
@@ -61,7 +61,7 @@ export default class AppComponent extends React.Component<AppDefaultComponentPro
           </section>
         )
       }
-      if (isAuthenticated) {
+      if (isAuthenticated && this.state.OSMOAuth) {
         return (
           <OSMLoggedInComponent oauth={this.state.OSMOAuth} />
         )

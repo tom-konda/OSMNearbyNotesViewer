@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { coordinateCalc } from './coordinate-calc';
 import { Map, TileLayer, Rectangle, Marker } from 'react-leaflet';
 
@@ -8,7 +8,7 @@ export default class MapComponent extends React.Component<MapComponentProps, voi
   }
   render() {
     const leaflet = () => {
-      if (this.props.notes) {
+      if (this.props.notes && this.props.centerCoordinate) {
         const markers = this.props.notes.map(
           (note, index) => {
             const markerLatLng = note.latlng;

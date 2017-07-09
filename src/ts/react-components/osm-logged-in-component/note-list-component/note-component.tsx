@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import CommentComponent from './comment-component';
 import convertDatetoText from './convert-date-format';
 
@@ -12,12 +12,12 @@ export default class NoteComponent extends React.Component<NoteComponentProps, N
     }
   }
   componentDidMount() {
-    const noteComponentElement = document.querySelector(`#note-${this.props.note.id}`);
+    const noteComponentElement = document.querySelector(`#note-${this.props.note.id}`) as Element;
     noteComponentElement.addEventListener(
       'submitSuccess',
       (event: CustomEvent) => {
         const modifiedNoteData = event.detail;
-        const currentPostState = this.prePostState;
+        const currentPostState = this.prePostState as NoteComponentState;
         currentPostState.currentNote.modified = modifiedNoteData.lastModified;
         currentPostState.currentNote.status = modifiedNoteData.noteStatus;
         modifiedNoteData.unloadComments.forEach(
@@ -32,21 +32,21 @@ export default class NoteComponent extends React.Component<NoteComponentProps, N
     );
     noteComponentElement.addEventListener(
       'submitFailure',
-      (event: CustomEvent) => {
-        this.setState(this.prePostState);
+      () => {
+        this.setState(this.prePostState as NoteComponentState);
         this.prePostState = null
       }
     );
   }
   componentWillUnmount() {
-    const noteComponentElement = document.querySelector(`#note-${this.props.note.id}`);
+    const noteComponentElement = document.querySelector(`#note-${this.props.note.id}`) as Element;
     noteComponentElement.removeEventListener('submitSuccess');
     noteComponentElement.removeEventListener('submitFailure');
   }
   private cloneState(state: NoteComponentState): NoteComponentState {
     const cloned = Object.assign({}, state);
     cloned.currentNote = Object.assign({}, state.currentNote);
-    cloned.currentNoteComments = [].concat(state.currentNoteComments);
+    cloned.currentNoteComments = [].concat(state.currentNoteComments as any);
     return cloned;
   }
   private handleSubmit(event: React.FormEvent<any>) {
@@ -100,7 +100,7 @@ export default class NoteComponent extends React.Component<NoteComponentProps, N
   }
   render() {
     const comments = this.state.currentNoteComments.map(
-      (noteComment, index) => {
+      (noteComment) => {
         return <CommentComponent key={noteComment.commentNum} noteComment={noteComment} />
       }
     );
@@ -122,7 +122,7 @@ export default class NoteComponent extends React.Component<NoteComponentProps, N
           </div>
           <form id={`note-${note.id}-form`} onSubmit={(event) => this.handleSubmit(event)}>
             <label htmlFor={`note-${note.id}-changeNoteStatus`}>メモの状態の変更</label>
-            <select id={`note-${note.id}-changeNoteStatus`} defaultValue={null} name="action">
+            <select id={`note-${note.id}-changeNoteStatus`} defaultValue={undefined} name="action">
               <option value="">変更しない</option>
               <option value="closed" disabled={isClosed}>解決</option>
               <option value="reopened" disabled={isClosed === false}>再開</option>

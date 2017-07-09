@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import NoteListComponent from './note-list-component/note-list-component';
 import MapComponent from './map-component/map-component';
 
@@ -8,11 +8,11 @@ export default class OSMLoggedInComponent extends React.Component<OSMLoggedInCom
     this.state = {
       notes: [],
       noteComments: [],
-      coordinate: { lat: null, lon: null },
+      coordinate: { lat: '', lon: '' },
       userName: '',
     }
   }
-  private handleGetNearbyNotesClick(event: React.MouseEvent<HTMLInputElement>) {
+  private handleGetNearbyNotesClick() {
     const getNearbyNotesClickEvent = new CustomEvent(
       'getNearbyNotesClicked',
       {
@@ -22,7 +22,7 @@ export default class OSMLoggedInComponent extends React.Component<OSMLoggedInCom
     window.dispatchEvent(getNearbyNotesClickEvent);
   }
   componentDidMount() {
-    const reactRootWrapperElement = document.querySelector('#AppWrapper');
+    const reactRootWrapperElement = document.querySelector('#AppWrapper') as Element;
     reactRootWrapperElement.addEventListener(
       'receiveCoordinate',
       (event: CustomEvent) => {
@@ -57,11 +57,11 @@ export default class OSMLoggedInComponent extends React.Component<OSMLoggedInCom
         return <MapComponent />
       }
     }
-    const osmServer = this.props.oauth.options().url;
+    const osmServer = this.props.oauth.options().url as string;
 
     return (
       <section className="main">
-        <input type="button" value="地図メモの取得を試みる" onClick={(event) => this.handleGetNearbyNotesClick(event)} />
+        <input type="button" value="地図メモの取得を試みる" onClick={() => this.handleGetNearbyNotesClick()} />
         <section id="note-map-container">
           <NoteListComponent notes={this.state.notes} noteComments={this.state.noteComments} userName={this.state.userName} osmServer={osmServer} />
           {getMapComponents(this.state.notes)}

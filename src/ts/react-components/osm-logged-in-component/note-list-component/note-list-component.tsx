@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import NoteComponent from './note-component';
 
 export default class NoteListComponent extends React.Component<NoteListComponentProps, void> {
@@ -7,7 +7,7 @@ export default class NoteListComponent extends React.Component<NoteListComponent
   }
   render() {
     let noteList = this.props.notes.map(
-      (note, index) => {
+      (note) => {
         return <NoteComponent key={note.id} note={note} noteComments={this.props.noteComments[note.id]} userName={this.props.userName} osmServer={this.props.osmServer} />
       }
     );

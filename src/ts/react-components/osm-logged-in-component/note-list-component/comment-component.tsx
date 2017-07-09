@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import convertDatetoText from './convert-date-format';
 
 export default class CommentComponent extends React.Component<CommentComponentProps, void> {
@@ -19,7 +19,7 @@ export default class CommentComponent extends React.Component<CommentComponentPr
     }
     else {
       userNameAndLink = (
-        <span className="user-osm-page">annonymous user</span>
+        <span className="user-osm-page">anonymous user</span>
       )
     }
 
