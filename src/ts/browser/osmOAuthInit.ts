@@ -1,4 +1,4 @@
-import osmAuth = require('osm-auth');
-const authConfig = <oauthJSONConfig>require('../../config/config.json');
+import * as osmAuth from 'osm-auth';
+const authConfig = <oauthJSConfig>require('../../config/config.js');
 
-exports.OAuth = new osmAuth(authConfig);
+export const OAuth = new osmAuth(authConfig);

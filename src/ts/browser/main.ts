@@ -1,14 +1,13 @@
 'use strict';
-const OSMOAuthConfig = require('./osmOAuthInit');
+import * as OSMOAuthConfig from './osmOAuthInit';
 import { coordinateCalc } from './coordinate-calc';
 import { OSMNearbyNotesDatabase } from './dexie-db';
-import codePointAt = require('code-point-at');
 
 if (typeof indexedDB === 'undefined') {
   document.addEventListener(
     'DOMContentLoaded',
     () => {
-      const reactRootWrapperElement = document.querySelector('#AppWrapper');
+      const reactRootWrapperElement = document.querySelector('#AppWrapper') as HTMLElement;
       const notQualifiedBrowserEvent = new CustomEvent('notQualifiedBrowser');
       reactRootWrapperElement.dispatchEvent(notQualifiedBrowserEvent);
     }
@@ -20,8 +19,8 @@ else {
     document.addEventListener(
       'DOMContentLoaded',
       () => {
-        const reactRootWrapperElement = document.querySelector('#AppWrapper');
-        const auth: osmAuthInstance = OSMOAuthConfig.OAuth;
+        const reactRootWrapperElement = document.querySelector('#AppWrapper') as HTMLElement;
+        const auth = OSMOAuthConfig.OAuth;
         const oauthReadyEvent = new CustomEvent(
           'oauthReady',
           {
@@ -32,9 +31,9 @@ else {
 
         window.addEventListener(
           'oauthButtonClicked',
-          (event) => {
+          () => {
             auth.authenticate(
-              (error, oauth) => {
+              (error) => {
                 if (error) {
                   console.error(error)
                 }
@@ -54,7 +53,7 @@ else {
 
         window.addEventListener(
           'getNearbyNotesClicked',
-          (event: CustomEvent) => {
+          () => {
             const getUserHomeLocation = () => {
               return new Promise(function (resolve, reject) {
                 auth.xhr({
@@ -64,11 +63,11 @@ else {
                   // details is an XML DOM of user details
                   if (error === null) {
                     const homeLocation = details.querySelector('osm > user > home');
-                    const userName = details.querySelector('osm > user').getAttribute('display_name');
+                    const userName = (details.querySelector('osm > user') as Element).getAttribute('display_name');
                     if (homeLocation !== null) {
-                      let coordinate: { lat: string, lon: string } = {
-                        lat: homeLocation.getAttribute('lat'),
-                        lon: homeLocation.getAttribute('lon'),
+                      const coordinate = {
+                        lat: homeLocation.getAttribute('lat') as string,
+                        lon: homeLocation.getAttribute('lon') as string,
                       }
                       const receiveDataEvent = new CustomEvent(
                         'receiveCoordinate',
@@ -117,12 +116,12 @@ else {
               const noteData: NoteFormat[] = [];
               for (let i = 0, notesCnt = notesXML.length; i < notesCnt; ++i) {
                 let lastModified = new Date(0);
-                let noteId = notesXML[i].querySelector('id').textContent;
+                let noteId = (notesXML[i].querySelector('id') as Element).textContent;
 
                 let commentList = notesXML[i].querySelectorAll('comments > comment');
                 const noteCommentsData: NoteCommentFormat[] = [];
                 for (let j = 0, commentCnt = commentList.length; j < commentCnt; ++j) {
-                  let date = commentList[j].querySelector('date').textContent;
+                  let date = (commentList[j].querySelector('date') as Element).textContent as string;
                   let commentDate = new Date(Date.parse(`${date.split(' ').slice(0, 2).join('T')}+00:00`));
                   noteCommentsData.push(createNoteCommentData(commentList[j], j, Number(noteId)));
                   if (commentDate > lastModified) {
@@ -140,7 +139,7 @@ else {
             ).then(
               setNotesList
               ).then(
-              () => findNotes(null)
+              () => findNotes()
               ).catch((error) => {
                 if (error instanceof XMLHttpRequest) {
                   swal(error.statusText, error.responseText, 'error');
@@ -159,7 +158,7 @@ else {
             event.preventDefault();
             const noteId: number = +event.detail.noteId;
             const target = event.detail.target;
-            const noteComponentElement = document.querySelector(`#note-${noteId}`)
+            const noteComponentElement = document.querySelector(`#note-${noteId}`) as Element
 
             const postCommentAndMemoState = (target: Element, noteId: number) => {
               return new Promise(
@@ -190,8 +189,8 @@ else {
 
                   const select = (target.querySelector(`#note-${noteId}-changeNoteStatus`) as HTMLSelectElement);
                   const textarea = (document.querySelector(`#note-${noteId}-addNoteComment`) as HTMLTextAreaElement);
-                  const fixedEncodeURIComponent = (str: string) => encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + codePointAt(c, 0).toString(16));
-                  let params: osmAuthXHROptions;
+                  const fixedEncodeURIComponent = (str: string) => encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + (c.codePointAt(0) as number).toString(16));
+                  let params: OSMAuth.OSMAuthXHROptions;
                   if (select.value) {
                     switch (select.value) {
                       case 'closed':
@@ -241,16 +240,17 @@ else {
 
                   const response = <XMLDocument>xhrResult.response;
                   db.comments.where('noteId').equals(noteId).count().then(
-                    (rowCount) => {
+                    (rowCount:number) => {
                       storedCommentsCount = rowCount;
 
                       const latestComments = response.querySelectorAll('comments > comment');
                       latestCommentsCount = response.querySelectorAll('comments > comment').length;
 
                       for (let i = storedCommentsCount; i < latestCommentsCount; ++i) {
-                        let comment = latestComments[i];
-                        let commentDate = new Date(Date.parse(`${comment.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+00:00`));
-                        let commentData = createNoteCommentData(comment, i, noteId);
+                        const comment = latestComments[i];
+                        const commentDateText = (comment.querySelector('date') as Element).textContent as string;
+                        const commentDate = new Date(Date.parse(`${commentDateText.split(' ').slice(0, 2).join('T')}+00:00`));
+                        const commentData = createNoteCommentData(comment, i, noteId);
                         unloadComments.push(commentData)
 
                         if (commentDate > lastModified) {
@@ -260,8 +260,8 @@ else {
                       return db.comments.bulkAdd(unloadComments);
                     }
                   ).then(
-                    (comment) => {
-                      noteData = createNoteData(response.querySelector('note'), lastModified, noteId);
+                    () => {
+                      noteData = createNoteData(response.querySelector('note') as Element, lastModified, noteId);
                       return db.notes.put(noteData);
                     }
                     ).then(
@@ -303,7 +303,7 @@ else {
       }
     )
 
-    const findNotes = (condition: any) => {
+    const findNotes = () => {
       let foundNotes: {
         notes: NoteFormat[],
         noteComments: { [key: number]: NoteCommentFormat[] },
@@ -351,7 +351,7 @@ else {
               detail: foundNotes,
             }
           );
-          const reactRootWrapperElement = document.querySelector('#AppWrapper');
+          const reactRootWrapperElement = document.querySelector('#AppWrapper') as HTMLElement;
           reactRootWrapperElement.dispatchEvent(foundNotesEvent);
         }
         )
@@ -359,12 +359,12 @@ else {
 
     const createNoteData = (noteElement: Element, lastModified: Date, noteId: number): NoteFormat => {
       const latlng: LatLngFormat = {
-        lat: noteElement.getAttribute('lat'),
-        lng: noteElement.getAttribute('lon'),
+        lat: noteElement.getAttribute('lat') as string,
+        lng: noteElement.getAttribute('lon') as string,
       }
 
-      const created = noteElement.querySelector('date_created').textContent;
-      const status = noteElement.querySelector('status').textContent;
+      const created = (noteElement.querySelector('date_created') as Element).textContent as string;
+      const status = (noteElement.querySelector('status') as Element).textContent as string;
 
       return {
         'latlng': latlng,
@@ -377,13 +377,14 @@ else {
     }
 
     const createNoteCommentData = (commentElement: Element, commentNum: number, noteId: number): NoteCommentFormat => {
-      const commentDate = new Date(Date.parse(`${commentElement.querySelector('date').textContent.split(' ').slice(0, 2).join('T')}+00:00`));
+      const dateText = (commentElement.querySelector('date') as Element).textContent as string;
+      const commentDate = new Date(Date.parse(`${dateText.split(' ').slice(0, 2).join('T')}+00:00`));
 
       let user = '';
       let userURL = '';
       if (commentElement.querySelector('user')) {
-        user = commentElement.querySelector('user').textContent;
-        userURL = commentElement.querySelector('user_url').textContent;
+        user = (commentElement.querySelector('user') as Element).textContent as string
+        userURL = (commentElement.querySelector('user_url') as Element).textContent as string
       }
       return {
         'noteId': noteId,
@@ -391,8 +392,8 @@ else {
         'date': commentDate,
         'user': user,
         'userURL': userURL,
-        'text': commentElement.querySelector('text').textContent,
-        'action': commentElement.querySelector('action').textContent,
+        'text': (commentElement.querySelector('text') as Element).textContent as string,
+        'action': (commentElement.querySelector('action') as Element).textContent as string,
       };
     }
   })();
