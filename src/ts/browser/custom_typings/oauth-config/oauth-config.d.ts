@@ -1,4 +1,4 @@
-interface oauthJSONConfig {
+interface oauthJSConfig {
   'oauth_consumer_key' : string
   'oauth_secret' : string
   'url' ?: string
