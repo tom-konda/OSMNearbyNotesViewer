@@ -3,6 +3,11 @@
   "compilerOptions": {
     "module": "es2015",
     "moduleResolution": "node",
+    "types": [
+      "node",
+      "sweetalert",
+      "dexie"
+    ],
     "outDir": "./../../../temp/browser",
     "rootDir": ".",
     "sourceMap": false
