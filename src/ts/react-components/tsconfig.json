@@ -10,10 +10,12 @@
     ],
     "types": [
       "react",
-      "react-dom"
+      "react-dom",
+      "osm-auth"
     ],
     "sourceMap": false,
     "jsx": "react",
+    "rootDir": ".",
     "outDir": "../../../temp/react-components"
   }
 }
